@@ -16,12 +16,20 @@ public:
     ~MainWindow();
 
 public slots:
+    //Загрузка выбранного изображения
     void LoadImage();
+
+    //Выбор изображения для обработки
     void SelectImage();
     
 private:
     Ui::MainWindow *ui;
-    QString _ImagePath;
+
+    //Путь к исходному изображению
+    QString _ImageSourcePath;
+
+    //Исходное изображение
+    QImage _ImageSource;
 };
 
 #endif // MAINWINDOW_H
