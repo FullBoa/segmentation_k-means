@@ -14,9 +14,14 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+public slots:
+    void LoadImage();
+    void SelectImage();
     
 private:
     Ui::MainWindow *ui;
+    QString _ImagePath;
 };
 
 #endif // MAINWINDOW_H
