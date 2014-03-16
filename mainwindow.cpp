@@ -32,7 +32,7 @@ void MainWindow::LoadImage()
 
         //выводим его на экран
         ui->labelImageSource->setScaledContents(true);
-        ui->labelImageSource->setPixmap(QPixmap.fromImage(_ImageSource));
+        ui->labelImageSource->setPixmap(QPixmap().fromImage(_ImageSource));
     }
 }
 
