@@ -6,10 +6,20 @@ KMeans::KMeans()
 {
 }
 
+//Конструктор класса
+//parClusterCount - количество кластеров для поиска
+//parImage - изображение для сегментации
+KMeans::KMeans(uint parClusterCount, QImage parImage)
+{
+    _ClusterCount = parClusterCount;
+    _Image = parImage;
+}
+
 //Нахождение расстояние между центроидом и отдельным пикселем
 //в двумерном пространстве и цветовой схеме RGB
 //parPixel - описание пикселя
 //parClusterCenter - описание центроида кластера
+//Возвращает расстояние между анализируемыми пикселем и центром кластера
 double KMeans::Distance(PixelRgb parPixel, PixelRgb parClusterCenter)
 {
     return sqrt((parClusterCenter.X - parPixel.X)*(parClusterCenter.X - parPixel.X)
