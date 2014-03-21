@@ -43,7 +43,7 @@ public:
 
 private:
     //Центры кластеров
-    QVector<PixelRgb> _CluserCenters;
+    PixelRgb* _ClusterCenters;
 
     //Количество кластеров
     uint _ClusterCount;

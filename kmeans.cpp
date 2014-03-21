@@ -20,6 +20,25 @@ KMeans::KMeans(uint parClusterCount, QImage parImage)
     {
         _Pixels[i] = new int[_Image.width()];
     }
+
+    //Инициализация массива центроидов
+    _ClusterCenters = new PixelRgb[_ClusterCount];
+    for (int i = 0; i < _ClusterCount; i++)
+    {
+        //переменная для получения целой части числа
+        double* intPart;
+
+        modf(qrand() / (double) INT_MAX * _Image.width(), intPart);
+        _ClusterCenters[i].X = (int) *intPart;
+
+        modf(qrand() / (double) INT_MAX * _Image.height(), intPart);
+        _ClusterCenters[i].Y = (int) *intPart;\
+
+        QRgb pixel = _Image.pixel(_ClusterCenters[i].X, _ClusterCenters[i].Y);
+        _ClusterCenters[i].Red = qRed(pixel);
+        _ClusterCenters[i].Green = qGreen(pixel);
+        _ClusterCenters[i].Blue = qBlue(pixel);
+    }
 }
 
 //Нахождение расстояние между центроидом и отдельным пикселем
