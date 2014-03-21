@@ -11,6 +11,7 @@ struct ClusteredPixel
     int Cluster;
 };
 
+//Структура для описание цветного пикселя
 struct PixelRgb
 {
     int X;
