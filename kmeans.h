@@ -51,18 +51,10 @@ private:
     //Сегментируемое изображение
     QImage _Image;
 
-    /*
-
-      ЭТО ВООБЩЕ НУЖНО???
-
-    //Высота изображения в пикселях
-    int _ImageHeight;
-
-    //Ширина изображения в пикселях
-    int _ImageWidth;*/
-
     //Кластеризуемые пиксели
-    QVector<QVector<ClusteredPixel> > _Pixels;
-};
+    //QVector<QVector<ClusteredPixel> > _Pixels;
+    int** _Pixels;
 
+
+};
 #endif // KMEANS_H

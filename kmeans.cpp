@@ -13,6 +13,13 @@ KMeans::KMeans(uint parClusterCount, QImage parImage)
 {
     _ClusterCount = parClusterCount;
     _Image = parImage;
+
+    //Инициализация массива номеров кластеров для каждого пикселя
+    _Pixels = new int*[_Image.height()];
+    for (int i=0; i < _Image.height(); i++)
+    {
+        _Pixels[i] = new int[_Image.width()];
+    }
 }
 
 //Нахождение расстояние между центроидом и отдельным пикселем
