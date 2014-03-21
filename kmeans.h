@@ -4,12 +4,14 @@
 #include <QImage>
 #include <QVector>
 
-//Структура
+//Структура для описание кластеризуемого пикселя.
+//X,Y - координаты пикселя
+//ClusterNumber - номер кластера, к которому был отнесен пиксель
 struct ClusteredPixel
 {
     int X;
     int Y;
-    int Cluster;
+    int ClusterNumber;
 };
 
 //Структура для описание цветного пикселя
