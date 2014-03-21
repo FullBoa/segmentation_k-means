@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QVector>
 
+//Структура
 struct ClusteredPixel
 {
     int X;
