@@ -27,19 +27,23 @@ struct PixelRgb
 class KMeans
 {
 public:
+
+    static int const MAX_ITERATION_COUNT = 1000;
+
     KMeans();
 
     //Конструктор класса
     //parClusterCount - количество кластеров для поиска
     //parImage - изображение для сегментации
-    KMeans(uint parClusterCount, QImage parImage);
+    KMeans(int parClusterCount, QImage parImage);
 
-    void Clustering();
+    int ClusterCount();
 
-    //Проверка, изменились ли координаты центроидов кластеров
-    //parOldCenters - старые координаты центроидов
-    //parNewCenters - новые координаты центров масс
-    bool ClusterCenterChanged(PixelRgb* parOldCenters, PixelRgb* parNewCenters);
+    //Кластеризация изображения
+    //Возвращает количество итераций
+    int Clustering();
+
+    int** Clusters();
 
     //Нахождение расстояние между центроидом и отдельным пикселем
     //в двумерном пространстве и цветовой схеме RGB
@@ -48,7 +52,7 @@ public:
     //Возвращает расстояние между анализируемыми пикселем и центром кластера
     static double Distance(PixelRgb parPixel, PixelRgb parClusterCenter);
 
-    void Init();
+    QImage Image();
 
 private:
     //Центры кластеров
@@ -60,11 +64,15 @@ private:
     //Сегментируемое изображение
     QImage _Image;
 
-    PixelRgb* _LastCenterPositions;
-
     //Кластеризуемые пиксели
-    //QVector<QVector<ClusteredPixel> > _Pixels;
     int** _Pixels;
+
+    //Проверка, изменились ли координаты центроидов кластеров
+    //parOldCenters - старые координаты центроидов
+    //parNewCenters - новые координаты центров масс
+    bool ClusterCenterChanged(PixelRgb* parOldCenters, PixelRgb* parNewCenters);
+
+    void Init();
 
 
 };

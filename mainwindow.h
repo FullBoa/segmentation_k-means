@@ -19,6 +19,8 @@ public slots:
     //Загрузка выбранного изображения
     void LoadImage();
 
+    void Segmentation();
+
     //Выбор изображения для обработки
     void SelectImage();
     
