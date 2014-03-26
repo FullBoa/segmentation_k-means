@@ -34,12 +34,21 @@ public:
     //parImage - изображение для сегментации
     KMeans(uint parClusterCount, QImage parImage);
 
+    void Clustering();
+
+    //Проверка, изменились ли координаты центроидов кластеров
+    //parOldCenters - старые координаты центроидов
+    //parNewCenters - новые координаты центров масс
+    bool ClusterCenterChanged(PixelRgb* parOldCenters, PixelRgb* parNewCenters);
+
     //Нахождение расстояние между центроидом и отдельным пикселем
     //в двумерном пространстве и цветовой схеме RGB
     //parPixel - описание пикселя
     //parClusterCenter - описание центроида кластера
     //Возвращает расстояние между анализируемыми пикселем и центром кластера
     static double Distance(PixelRgb parPixel, PixelRgb parClusterCenter);
+
+    void Init();
 
 private:
     //Центры кластеров
@@ -50,6 +59,8 @@ private:
 
     //Сегментируемое изображение
     QImage _Image;
+
+    PixelRgb* _LastCenterPositions;
 
     //Кластеризуемые пиксели
     //QVector<QVector<ClusteredPixel> > _Pixels;
