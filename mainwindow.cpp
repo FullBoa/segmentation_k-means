@@ -60,19 +60,41 @@ void MainWindow::Segmentation()
 
     for (int k = 0; k < segmentator.ClusterCount(); k++)
     {
-        colors[k] = qRgb(32*((k+1) / 4), 32*((k + 2)/ 4),32*((k + 3)/ 4));
+        //Red
+        if (k % 4 == 0)
+        {
+            colors[k] = qRgb(255 - 32 * k / 4, 0, 0);
+        }
+        //White, gray, black
+        else if ((k + 1) % 4 == 0)
+        {
+            colors[k] = qRgb(255 - 32 * (k+1) / 4, 255 - 32 * (k+1) / 4, 255 - 32 * (k+1) / 4);
+        }
+        //Blue
+        else if ((k + 2) % 4 == 0)
+        {
+            colors[k] = qRgb(0, 0, 255 - 32 * (k+2) / 4);
+        }
+        //Green
+        else
+        {
+            colors[k] = qRgb(0, 255 - 32 * (k+3) / 4, 0);
+        }
     }
 
     QImage newImage;
     newImage = _ImageSource;
 
     int numberCluster;
-    for (int i = 0; i < segmentator.Image().height(); i++)
+    for (int i = 0; i < segmentator.Image().width(); i++)
     {
-        for (int j = 0; j < segmentator.Image().width(); j++)
+        for (int j = 0; j < segmentator.Image().height(); j++)
         {
             numberCluster = segmentator.Clusters()[i][j];
             newImage.setPixel(i,j,colors[numberCluster]);
         }
     }
+
+    ui->labelImageSource->setScaledContents(true);
+    ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage));
 }

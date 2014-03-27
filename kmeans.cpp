@@ -37,6 +37,7 @@ int KMeans::Clustering()
     do
     {
         iterationCount++;
+        qDebug() << "iteration " << iterationCount;
 
         //Распределение пикселей по кластерам
 
@@ -47,11 +48,14 @@ int KMeans::Clustering()
         int numberNearestCluster;
 
         //Проходим по всем пикселям
-        for (int i = 0; i < _Image.height(); i++)
+        for (int i = 0; i < _Image.width(); i++)
         {
-            for (int j = 0; j < _Image.width(); j++)
+            if (i % 100 == 0)
             {
-                qDebug() << i << "   " << j;
+                qDebug() << "column " << i;
+            }
+            for (int j = 0; j < _Image.height(); j++)
+            {                
                 //Текущий обрабатываемый пиксель
                 PixelRgb currentPixel;
                 currentPixel.X = i;
@@ -103,9 +107,9 @@ int KMeans::Clustering()
 
         //Расчет новых значений центроидов
         int numberCluster;
-        for (int i = 0; i < _Image.height(); i++)
+        for (int i = 0; i < _Image.width(); i++)
         {
-            for (int j = 0; j < _Image.width(); j++)
+            for (int j = 0; j < _Image.height(); j++)
             {
                 numberCluster =_Pixels[i][j];
                 pixelInCluster[numberCluster]++;
@@ -137,7 +141,7 @@ int KMeans::Clustering()
             done = true;
         }
     }
-    while(done || iterationCount >= MAX_ITERATION_COUNT);
+    while(!done && (iterationCount < MAX_ITERATION_COUNT));
 
     return iterationCount;
 }
@@ -188,10 +192,10 @@ QImage KMeans::Image()
 void KMeans::Init()
 {
     //Инициализация массива номеров кластеров для каждого пикселя
-    _Pixels = new int*[_Image.height()];
-    for (int i=0; i < _Image.height(); i++)
+    _Pixels = new int*[_Image.width()];
+    for (int i=0; i < _Image.width(); i++)
     {
-        _Pixels[i] = new int[_Image.width()];
+        _Pixels[i] = new int[_Image.height()];
     }
 
     //Инициализация массива центроидов
