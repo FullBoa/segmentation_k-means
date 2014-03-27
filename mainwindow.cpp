@@ -35,8 +35,8 @@ void MainWindow::LoadImage()
         _ImageSource = QImage(_ImageSourcePath);
 
         //выводим его на экран
-        ui->labelImageSource->setScaledContents(true);
-        ui->labelImageSource->setPixmap(QPixmap().fromImage(_ImageSource));
+        ui->labelImageSource->setPixmap(QPixmap().fromImage(_ImageSource).scaled(ui->labelImageSource->size(),
+                                                                                 Qt::KeepAspectRatio));
     }
 }
 
@@ -96,5 +96,6 @@ void MainWindow::Segmentation()
     }
 
     ui->labelImageSource->setScaledContents(true);
-    ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage));
+    ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
+                                                                        Qt::KeepAspectRatio);
 }

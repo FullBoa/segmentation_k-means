@@ -124,11 +124,14 @@ int KMeans::Clustering()
 
         for (int k = 0; k < _ClusterCount; k++)
         {
-            newCenterPositioin[k].X /= pixelInCluster[k];
-            newCenterPositioin[k].Y /= pixelInCluster[k];
-            newCenterPositioin[k].Red /= pixelInCluster[k];
-            newCenterPositioin[k].Green /= pixelInCluster[k];
-            newCenterPositioin[k].Blue /= pixelInCluster[k];
+            if (pixelInCluster[k] != 0)
+            {
+                newCenterPositioin[k].X /= pixelInCluster[k];
+                newCenterPositioin[k].Y /= pixelInCluster[k];
+                newCenterPositioin[k].Red /= pixelInCluster[k];
+                newCenterPositioin[k].Green /= pixelInCluster[k];
+                newCenterPositioin[k].Blue /= pixelInCluster[k];
+            }
         }
 
         if (ClusterCenterChanged(_ClusterCenters, newCenterPositioin))
