@@ -18,11 +18,20 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->buttonSelectImage, SIGNAL(clicked()), this, SLOT(SelectImage()));
 
     connect(ui->buttonSegmentation, SIGNAL(clicked()), this, SLOT(Segmentation()));
+
+    //Значение количества сегментов на слайдере изменилось
+    connect(ui->sliderClusterCount, SIGNAL(valueChanged(int)), this, SLOT(ClusterCountChange(int)));
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::ClusterCountChange(int parClusterCount)
+{
+    ui->labelSegmentCount->setText(QString::fromUtf8("Сегментов: ") \
+                                   + QString::number(parClusterCount));
 }
 
 //Загрузка изображения
@@ -55,6 +64,10 @@ void MainWindow::Segmentation()
     int iterationCount;
     KMeans segmentator(ui->sliderClusterCount->value(), _ImageSource);
     iterationCount = segmentator.Clustering();
+
+    ui->labelIterationCount->setText(QString::fromUtf8("Выполено за ")
+                                     + QString::number(iterationCount)
+                                     + QString::fromUtf8(" итераций"));
 
     QRgb* colors = new QRgb[segmentator.ClusterCount()];
 
@@ -97,5 +110,5 @@ void MainWindow::Segmentation()
 
     ui->labelImageSource->setScaledContents(true);
     ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
-                                                                        Qt::KeepAspectRatio);
+                                                                        Qt::KeepAspectRatio));
 }

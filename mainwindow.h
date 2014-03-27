@@ -16,6 +16,8 @@ public:
     ~MainWindow();
 
 public slots:
+
+    void ClusterCountChange(int parClusterCount);
     //Загрузка выбранного изображения
     void LoadImage();
 
