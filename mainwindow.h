@@ -10,6 +10,9 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
+signals:
+    void ImageClustered(int parIterationCount, int parClusterCount, QImage parImage);
     
 public:
     explicit MainWindow(QWidget *parent = 0);

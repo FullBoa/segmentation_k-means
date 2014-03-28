@@ -3,10 +3,6 @@
 
 #include "math.h"
 
-KMeans::KMeans()
-{
-}
-
 //Конструктор класса
 //parClusterCount - количество кластеров для поиска
 //parImage - изображение для сегментации
@@ -19,152 +15,72 @@ KMeans::KMeans(int parClusterCount, QImage parImage)
     _Image = parImage;
 
     _Pixels = NULL;
+
+    _LastIterationCount = 0;
 }
 
+//Получение количества кластеров
 int KMeans::ClusterCount()
 {
     return _ClusterCount;
 }
 
-int KMeans::Clustering()
+//Сегментация изображения
+//Возвращает двумерных массив принадлежности пикселя сегментам
+//parMaxIterationCount - максимальное количество итераций при сегментации
+//parDistancePrecision - при изменении позиции центроидов меньше, чем на данное расстояние,
+//считается, что изменений не было.
+int **KMeans::Clustering(int parMaxIterationCount,
+                         double parDistancePrecision)
 {
+    //Инициализация центроидов и массива принадлежности пикселей сегментам
     Init();
-    qDebug() << "Height: " << _Image.height();
-    qDebug() << "Width: " << _Image.width();
 
+    //флаг окончания сегментации
     bool done = false;
+
+    //Количество пройденных итераций
     int iterationCount = 0;
     do
     {
         iterationCount++;
-        qDebug() << "iteration " << iterationCount;
 
         //Распределение пикселей по кластерам
-
-        //Минимальное расстояние до центроида
-        double minDistance;
-
-        //Номер ближайшего центроида
-        int numberNearestCluster;
-
-        //Проходим по всем пикселям
-        for (int i = 0; i < _Image.width(); i++)
-        {
-            if (i % 100 == 0)
-            {
-                qDebug() << "column " << i;
-            }
-            for (int j = 0; j < _Image.height(); j++)
-            {                
-                //Текущий обрабатываемый пиксель
-                PixelRgb currentPixel;
-                currentPixel.X = i;
-                currentPixel.Y = j;
-                currentPixel.Red = qRed(_Image.pixel(i,j));
-                currentPixel.Green = qGreen(_Image.pixel(i,j));
-                currentPixel.Blue = qBlue(_Image.pixel(i,j));
-
-                //Ишем ближайший центроид
-                minDistance = Distance(currentPixel,_ClusterCenters[0]);
-                numberNearestCluster = 0;
-
-                double currentDistance;
-                for(int k = 1; k < _ClusterCount; k++)
-                {
-                    currentDistance = Distance(currentPixel, _ClusterCenters[k]);
-                    if (currentDistance < minDistance)
-                    {
-                        numberNearestCluster = k;
-                        minDistance = currentDistance;
-                    }
-                }
-
-                //Приписываем пиксель кластеру
-                _Pixels[i][j] = numberNearestCluster;
-            }
-        }
+        PixelClustering();
 
         //Вычисление новых центров масс кластеров.
+        PixelRgb* newCenterPositions;
+        newCenterPositions = NewCenterPositions();
 
-        //Новые координаты центроида
-        PixelRgb* newCenterPositioin = new PixelRgb[_ClusterCount];
-
-        //Пикселей в кластере
-        int* pixelInCluster = new int[_ClusterCount];
-
-        //Инициализация новых центроидов
-        for (int k = 0; k < _ClusterCount; k++)
-        {
-            pixelInCluster[k] = 0;
-
-            newCenterPositioin[k].X = 0;
-            newCenterPositioin[k].Y = 0;
-            newCenterPositioin[k].Red = 0;
-            newCenterPositioin[k].Green = 0;
-            newCenterPositioin[k].Blue = 0;
-        }
-
-
-        //Расчет новых значений центроидов
-        int numberCluster;
-        for (int i = 0; i < _Image.width(); i++)
-        {
-            for (int j = 0; j < _Image.height(); j++)
-            {
-                numberCluster =_Pixels[i][j];
-                pixelInCluster[numberCluster]++;
-
-                newCenterPositioin[numberCluster].X += i;
-                newCenterPositioin[numberCluster].Y += j;
-                newCenterPositioin[numberCluster].Red += qRed(_Image.pixel(i,j));
-                newCenterPositioin[numberCluster].Green += qGreen(_Image.pixel(i,j));
-                newCenterPositioin[numberCluster].Blue += qBlue(_Image.pixel(i,j));
-            }
-        }
-
-        for (int k = 0; k < _ClusterCount; k++)
-        {
-            if (pixelInCluster[k] != 0)
-            {
-                newCenterPositioin[k].X /= pixelInCluster[k];
-                newCenterPositioin[k].Y /= pixelInCluster[k];
-                newCenterPositioin[k].Red /= pixelInCluster[k];
-                newCenterPositioin[k].Green /= pixelInCluster[k];
-                newCenterPositioin[k].Blue /= pixelInCluster[k];
-            }
-        }
-
-        if (ClusterCenterChanged(_ClusterCenters, newCenterPositioin))
+        if (ClusterCenterChanged(_ClusterCenters, newCenterPositions))
         {
             delete _ClusterCenters;
-            _ClusterCenters = newCenterPositioin;
+            _ClusterCenters = newCenterPositions;
         }
         else
         {
             done = true;
         }
     }
-    while(!done && (iterationCount < MAX_ITERATION_COUNT));
+    while(!done && (iterationCount < parMaxIterationCount));
 
-    return iterationCount;
-}
+    _LastIterationCount = iterationCount;
 
-int** KMeans::Clusters()
-{
     return _Pixels;
 }
 
 //Проверка, изменились ли координаты центроидов кластеров
 //parOldCenters - старые координаты центроидов
 //parNewCenters - новые координаты центров масс
-bool KMeans::ClusterCenterChanged(PixelRgb *parOldCenters, PixelRgb *parNewCenters)
+//parDistancePrecision - точность определения изменения расстояния.
+//Перемещение центроидов меньше, чем на данное расстояние, изменением не считается.
+bool KMeans::ClusterCenterChanged(PixelRgb *parOldCenters, PixelRgb *parNewCenters, double parDistancePrecision)
 {
     bool changed = false;
 
     for (int k = 0; (k < _ClusterCount) && !changed; k++)
     {
-        //TODO: убрать магическое число!!!
-        if (Distance(parOldCenters[k], parNewCenters[k]) > 10)
+        if (Distance(parOldCenters[k], parNewCenters[k]) > parDistancePrecision)
         {
             changed = true;
         }
@@ -187,11 +103,13 @@ double KMeans::Distance(PixelRgb parPixel, PixelRgb parClusterCenter)
                 + (parClusterCenter.Blue - parPixel.Blue)*(parClusterCenter.Blue - parPixel.Blue));
 }
 
+//Получение сегментируемого изображения
 QImage KMeans::Image()
 {
     return _Image;
 }
 
+//Инициализация массивов центроидов и пикселей сегментируемого изображения
 void KMeans::Init()
 {
     //Инициализация массива номеров кластеров для каждого пикселя
@@ -219,5 +137,108 @@ void KMeans::Init()
         _ClusterCenters[i].Red = qRed(pixel);
         _ClusterCenters[i].Green = qGreen(pixel);
         _ClusterCenters[i].Blue = qBlue(pixel);
+    }
+}
+
+//Получение количества итераций при последний сегментации
+int KMeans::LastIterationCount()
+{
+    return _LastIterationCount;
+}
+
+//Получение новых позиций центроидов
+PixelRgb* KMeans::NewCenterPositions()
+{
+    //Новые координаты центроида
+    PixelRgb* newCenterPositioins = new PixelRgb[_ClusterCount];
+
+    //Пикселей в кластере
+    int* pixelInCluster = new int[_ClusterCount];
+
+    //Инициализация новых центроидов
+    for (int k = 0; k < _ClusterCount; k++)
+    {
+        pixelInCluster[k] = 0;
+
+        newCenterPositioins[k].X = 0;
+        newCenterPositioins[k].Y = 0;
+        newCenterPositioins[k].Red = 0;
+        newCenterPositioins[k].Green = 0;
+        newCenterPositioins[k].Blue = 0;
+    }
+
+
+    //Расчет новых значений центроидов
+    int numberCluster;
+    for (int i = 0; i < _Image.width(); i++)
+    {
+        for (int j = 0; j < _Image.height(); j++)
+        {
+            numberCluster =_Pixels[i][j];
+            pixelInCluster[numberCluster]++;
+
+            newCenterPositioins[numberCluster].X += i;
+            newCenterPositioins[numberCluster].Y += j;
+            newCenterPositioins[numberCluster].Red += qRed(_Image.pixel(i,j));
+            newCenterPositioins[numberCluster].Green += qGreen(_Image.pixel(i,j));
+            newCenterPositioins[numberCluster].Blue += qBlue(_Image.pixel(i,j));
+        }
+    }
+
+    for (int k = 0; k < _ClusterCount; k++)
+    {
+        if (pixelInCluster[k] != 0)
+        {
+            newCenterPositioins[k].X /= pixelInCluster[k];
+            newCenterPositioins[k].Y /= pixelInCluster[k];
+            newCenterPositioins[k].Red /= pixelInCluster[k];
+            newCenterPositioins[k].Green /= pixelInCluster[k];
+            newCenterPositioins[k].Blue /= pixelInCluster[k];
+        }
+    }
+
+    return newCenterPositioins;
+}
+
+//Отнесение пикселя к сегментам
+void KMeans::PixelClustering()
+{
+    //Минимальное расстояние до центроида
+    double minDistance;
+
+    //Номер ближайшего центроида
+    int numberNearestCluster;
+
+    //Проходим по всем пикселям
+    for (int i = 0; i < _Image.width(); i++)
+    {
+        for (int j = 0; j < _Image.height(); j++)
+        {
+            //Текущий обрабатываемый пиксель
+            PixelRgb currentPixel;
+            currentPixel.X = i;
+            currentPixel.Y = j;
+            currentPixel.Red = qRed(_Image.pixel(i,j));
+            currentPixel.Green = qGreen(_Image.pixel(i,j));
+            currentPixel.Blue = qBlue(_Image.pixel(i,j));
+
+            //Ишем ближайший центроид
+            minDistance = Distance(currentPixel,_ClusterCenters[0]);
+            numberNearestCluster = 0;
+
+            double currentDistance;
+            for(int k = 1; k < _ClusterCount; k++)
+            {
+                currentDistance = Distance(currentPixel, _ClusterCenters[k]);
+                if (currentDistance < minDistance)
+                {
+                    numberNearestCluster = k;
+                    minDistance = currentDistance;
+                }
+            }
+
+            //Приписываем пиксель кластеру
+            _Pixels[i][j] = numberNearestCluster;
+        }
     }
 }

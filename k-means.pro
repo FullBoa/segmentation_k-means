@@ -12,9 +12,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    kmeans.cpp
+    kmeans.cpp \
+    dialogresult.cpp
 
 HEADERS  += mainwindow.h \
-    kmeans.h
+    kmeans.h \
+    dialogresult.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    dialogresult.ui

@@ -1,9 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QDialog>
 #include <QFileDialog>
 
 #include "kmeans.h"
+#include "dialogresult.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -17,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //Обработка кнопки "Обзор" для выбора изображения
     connect(ui->buttonSelectImage, SIGNAL(clicked()), this, SLOT(SelectImage()));
 
+    //Обработка кнопки "Сегментировать изображение"
     connect(ui->buttonSegmentation, SIGNAL(clicked()), this, SLOT(Segmentation()));
 
     //Значение количества сегментов на слайдере изменилось
@@ -61,13 +64,9 @@ void MainWindow::SelectImage()
 
 void MainWindow::Segmentation()
 {
-    int iterationCount;
+    int** pixels;
     KMeans segmentator(ui->sliderClusterCount->value(), _ImageSource);
-    iterationCount = segmentator.Clustering();
-
-    ui->labelIterationCount->setText(QString::fromUtf8("Выполено за ")
-                                     + QString::number(iterationCount)
-                                     + QString::fromUtf8(" итераций"));
+    pixels = segmentator.Clustering();
 
     QRgb* colors = new QRgb[segmentator.ClusterCount()];
 
@@ -95,6 +94,10 @@ void MainWindow::Segmentation()
         }
     }
 
+    ui->labelIterationCount->setText(QString::fromUtf8("Выполено за ")
+                                     + QString::number(segmentator.LastIterationCount())
+                                     + QString::fromUtf8(" итераций"));
+
     QImage newImage;
     newImage = _ImageSource;
 
@@ -103,12 +106,15 @@ void MainWindow::Segmentation()
     {
         for (int j = 0; j < segmentator.Image().height(); j++)
         {
-            numberCluster = segmentator.Clusters()[i][j];
+            numberCluster = pixels[i][j];
             newImage.setPixel(i,j,colors[numberCluster]);
         }
     }
 
-    ui->labelImageSource->setScaledContents(true);
-    ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
-                                                                        Qt::KeepAspectRatio));
+    DialogResult* results = new DialogResult();
+    results->ShowResult(segmentator.LastIterationCount(),
+                       segmentator.ClusterCount(),
+                       newImage);
+    //ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
+                                         //                               Qt::KeepAspectRatio));
 }
