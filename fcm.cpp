@@ -1,0 +1,210 @@
+#include "fcm.h"
+
+#include "math.h"
+
+#include "QDebug"
+
+FCM::FCM(int parClusterCount, QImage parImage, double parEpsilon, double parM) : KMeans (parClusterCount,parImage)
+{
+    _Epsilon = parEpsilon;
+    _M = parM;
+}
+
+int **FCM::Clustering(int parMaxIterationCount)
+{
+    //Инициализация центроидов и массива принадлежности пикселей сегментам
+    Init();
+
+    //флаг окончания сегментации
+    bool done = false;
+
+    //Количество пройденных итераций
+    int iterationCount = 0;
+
+    double objectiveFunctionValue = ObjectiveFunction();
+    do
+    {
+        iterationCount++;
+
+        //Вычисление новых центров масс кластеров.
+        _ClusterCenters = NewCenterPositions();
+
+        double newObjectiveFunctioinValue = ObjectiveFunction();
+
+        if (fabs(objectiveFunctionValue - newObjectiveFunctioinValue) > _Epsilon)
+        {
+            objectiveFunctionValue = newObjectiveFunctioinValue;
+        }
+        else
+        {
+            done = true;
+        }
+    }
+    while(!done && (iterationCount < parMaxIterationCount));
+
+    _LastIterationCount = iterationCount;
+
+    int** pixels = new int*[_Image.width()];
+    for (int i=0; i < _Image.width(); i++)
+    {
+        pixels[i] = new int[_Image.height()];
+    }
+
+    for (int i=0; i<_Image.width(); i++)
+    {
+        for (int j=0; j<_Image.height(); j++)
+        {
+            double maxMF = MembershipFunction(0,i,j);
+            pixels[i][j] = 0;
+
+            for (int k=1; k<_ClusterCount; k++)
+            {
+                double currentFM = MembershipFunction(k,i,j);
+                if (currentFM > maxMF)
+                {
+                    maxMF = currentFM;
+                    pixels[i][j] = k;
+                }
+            }
+        }
+    }
+
+    return pixels;
+}
+
+//Нахождение расстояние между центроидом и отдельным пикселем
+//в двумерном пространстве и цветовой схеме RGB
+//parPixel - описание пикселя
+//parClusterCenter - описание центроида кластера
+//Возвращает расстояние между анализируемыми пикселем и центром кластера
+double FCM::Distance(PixelRgb parPixel, ClusterCenterRgb parClusterCenter)
+{
+    return sqrt((parClusterCenter.X - parPixel.X)*(parClusterCenter.X - parPixel.X)
+                + (parClusterCenter.Y - parPixel.Y)*(parClusterCenter.Y - parPixel.Y)
+                + (parClusterCenter.Red - parPixel.Red)*(parClusterCenter.Red - parPixel.Red)
+                + (parClusterCenter.Green - parPixel.Green)*(parClusterCenter.Green - parPixel.Green)
+                + (parClusterCenter.Blue - parPixel.Blue)*(parClusterCenter.Blue - parPixel.Blue));
+}
+
+double FCM::Distance(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ)
+{
+    PixelRgb pixel;
+
+    pixel.X = parPixelIndexI;
+    pixel.Y = parPixelIndexJ;
+    pixel.Red = qRed(_Image.pixel(parPixelIndexI,parPixelIndexJ));
+    pixel.Green = qGreen(_Image.pixel(parPixelIndexI,parPixelIndexJ));
+    pixel.Blue = qBlue(_Image.pixel(parPixelIndexI,parPixelIndexJ));
+
+    return Distance(pixel,_ClusterCenters[parClusterIndex]);
+
+
+}
+
+void FCM::Init()
+{
+    //Инициализация массива центроидов
+    _ClusterCenters = new ClusterCenterRgb[_ClusterCount];
+    for (int i = 0; i < _ClusterCount; i++)
+    {
+        //переменная для получения целой части числа
+        double* intPart = new double;
+        *intPart = 0;
+
+        modf(qrand() / (double) INT_MAX * _Image.width(), intPart);
+        _ClusterCenters[i].X = (int) *intPart;
+
+        modf(qrand() / (double) INT_MAX * _Image.height(), intPart);
+        _ClusterCenters[i].Y = (int) *intPart;\
+
+        QRgb pixel = _Image.pixel(_ClusterCenters[i].X, _ClusterCenters[i].Y);
+        _ClusterCenters[i].Red = qRed(pixel);
+        _ClusterCenters[i].Green = qGreen(pixel);
+        _ClusterCenters[i].Blue = qBlue(pixel);
+    }
+}
+
+double FCM::MembershipFunction(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ)
+{
+    double sum = 0;
+    for (int i = 0; i < _ClusterCount; i++)
+    {
+        double distCurrentCluster = Distance(parClusterIndex, parPixelIndexI, parPixelIndexJ);
+        double distOtherCluster = Distance(i, parPixelIndexI, parPixelIndexJ);
+        if (distCurrentCluster == 0)
+        {
+            return 1;
+        }
+        else if (distOtherCluster == 0)
+        {
+            return 0;
+        }
+        else
+        {
+            sum+=pow(distCurrentCluster
+                     /distOtherCluster,
+                     2.0/(_M-1));
+        }
+    }
+
+    return 1.0/sum;
+}
+
+ClusterCenterRgb* FCM::NewCenterPositions()
+{
+    //Новые координаты центроида
+    ClusterCenterRgb* newCenterPositioins = new ClusterCenterRgb[_ClusterCount];
+
+    //Для каждого кластера
+    for (int k=0; k < _ClusterCount; k++)
+    {
+        double numeratorX=0;
+        double numeratorY=0;
+        double numeratorRed=0;
+        double numeratorGreen=0;
+        double numeratorBlue=0;
+
+        double denominator=0;
+
+        for (int i=0; i < _Image.width(); i++)
+        {
+            for (int j=0; j < _Image.height(); j++)
+            {
+                double u = pow(MembershipFunction(k,i,j),_M);
+
+                numeratorX+=u*i;
+                numeratorY+=u*j;
+                numeratorRed+=u*qRed(_Image.pixel(i,j));
+                numeratorGreen+=u*qGreen(_Image.pixel(i,j));
+                numeratorBlue+=u*qBlue(_Image.pixel(i,j));
+
+                denominator+=u;
+            }
+        }
+
+        newCenterPositioins[k].X = numeratorX/denominator;
+        newCenterPositioins[k].Y = numeratorX/denominator;
+        newCenterPositioins[k].Red = numeratorRed/denominator;
+        newCenterPositioins[k].Green = numeratorGreen/denominator;
+        newCenterPositioins[k].Blue = numeratorBlue/denominator;
+    }
+
+    return newCenterPositioins;
+}
+
+double FCM::ObjectiveFunction()
+{
+    double sum=0;
+    for (int i=0; i<_Image.width(); i++)
+    {
+        for (int j=0; j<_Image.height(); j++)
+        {
+            for (int k=0; k<_ClusterCount; k++)
+            {
+                sum+=pow(MembershipFunction(k,i,j),_M)*pow(Distance(k,i,j),2);
+            }
+        }
+    }
+
+    return sum;
+}

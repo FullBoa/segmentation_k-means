@@ -13,11 +13,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     kmeans.cpp \
-    dialogresult.cpp
+    dialogresult.cpp \
+    fcm.cpp
 
 HEADERS  += mainwindow.h \
     kmeans.h \
-    dialogresult.h
+    dialogresult.h \
+    fcm.h
 
 FORMS    += mainwindow.ui \
     dialogresult.ui

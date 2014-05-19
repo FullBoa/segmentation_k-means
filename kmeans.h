@@ -13,6 +13,16 @@ struct PixelRgb
     uint Blue;
 };
 
+//Структура для описания центра кластера цветных пикселей
+struct ClusterCenterRgb
+{
+    double X;
+    double Y;
+    double Red;
+    double Green;
+    double Blue;
+};
+
 class KMeans
 {
 public:
@@ -56,7 +66,7 @@ public:
     //Задание количества сегментов, на которое нужно будет разбить изображение
     void SetClusterCount(int parClusterCount);
 
-private:
+protected:
     //Центры кластеров
     PixelRgb* _ClusterCenters;
 

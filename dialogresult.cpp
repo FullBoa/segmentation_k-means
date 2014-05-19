@@ -13,7 +13,7 @@ DialogResult::~DialogResult()
     delete ui;
 }
 
-void DialogResult::ShowResult(int parIterationCount, int parClusterCount, QImage parImage)
+void DialogResult::ShowResult(int parIterationCount, int parClusterCount, QImage parImage, QString method)
 {
     this->close();
 
@@ -21,7 +21,9 @@ void DialogResult::ShowResult(int parIterationCount, int parClusterCount, QImage
                                                                         Qt::KeepAspectRatio));
 
 
-    ui->labelInfo->setText(QString::fromUtf8("Сегментов: ")
+    ui->labelInfo->setText(method
+                           + "   "
+                           + QString::fromUtf8("Сегментов: ")
                            + QString::number(parClusterCount)
                            + QString::fromUtf8(". Выполено за ")
                            + QString::number(parIterationCount)

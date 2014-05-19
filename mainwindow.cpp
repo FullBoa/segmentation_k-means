@@ -5,6 +5,7 @@
 #include <QFileDialog>
 
 #include "kmeans.h"
+#include "fcm.h"
 #include "dialogresult.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -68,6 +69,10 @@ void MainWindow::Segmentation()
     KMeans segmentator(ui->sliderClusterCount->value(), _ImageSource);
     pixels = segmentator.Clustering();
 
+    int** pixelsFCM;
+    FCM segmentatorFCM(ui->sliderClusterCount->value(), _ImageSource,5,2);
+    pixelsFCM = segmentatorFCM.Clustering(20);
+
     QRgb* colors = new QRgb[segmentator.ClusterCount()];
 
     for (int k = 0; k < segmentator.ClusterCount(); k++)
@@ -94,12 +99,17 @@ void MainWindow::Segmentation()
         }
     }
 
-    ui->labelIterationCount->setText(QString::fromUtf8("Выполено за ")
+    /*ui->labelIterationCount->setText(QString::fromUtf8("Выполено за ")
                                      + QString::number(segmentator.LastIterationCount())
-                                     + QString::fromUtf8(" итераций"));
+                                     + QString::fromUtf8(" итераций"));*/
 
     QImage newImage;
     newImage = _ImageSource;
+
+    QImage imageFCM;
+    imageFCM = _ImageSource;
+
+
 
     int numberCluster;
     for (int i = 0; i < segmentator.Image().width(); i++)
@@ -108,13 +118,23 @@ void MainWindow::Segmentation()
         {
             numberCluster = pixels[i][j];
             newImage.setPixel(i,j,colors[numberCluster]);
+
+            numberCluster = pixelsFCM[i][j];
+            imageFCM.setPixel(i,j,colors[numberCluster]);
         }
     }
 
     DialogResult* results = new DialogResult();
     results->ShowResult(segmentator.LastIterationCount(),
                        segmentator.ClusterCount(),
-                       newImage);
+                       newImage,
+                        "k-means");
+
+    DialogResult* resultsFCM = new DialogResult();
+    resultsFCM->ShowResult(segmentatorFCM.LastIterationCount(),
+                       segmentatorFCM.ClusterCount(),
+                       imageFCM,
+                           "FCM");
     //ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
                                          //                               Qt::KeepAspectRatio));
 }

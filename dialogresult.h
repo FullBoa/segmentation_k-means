@@ -15,7 +15,7 @@ public:
     explicit DialogResult(QWidget *parent = 0);
     ~DialogResult();
 
-    void ShowResult(int parIterationCount, int parClusterCount, QImage parImage);
+    void ShowResult(int parIterationCount, int parClusterCount, QImage parImage, QString method);
     
 private:
     Ui::DialogResult *ui;
