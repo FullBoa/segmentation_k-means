@@ -15,22 +15,13 @@ public:
     //считается, что изменений не было.
     int** Clustering(int parMaxIterationCount = MAX_ITERATION_COUNT);
 
-    //Нахождение расстояние между центроидом и отдельным пикселем
-    //в пространстве (X,Y,R,G,B)
-    //parPixel - описание пикселя
-    //parClusterCenter - описание центроида сегмета
-    //Возвращает расстояние между анализируемыми пикселем и центром сегмента
-    static double Distance(PixelRgb parPixel, ClusterCenterRgb parClusterCenter);
-
-    double Distance(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ);
-
     double MembershipFunction(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ);
 
     double ObjectiveFunction();
 
 protected:
     //Центры кластеров
-    ClusterCenterRgb* _ClusterCenters;
+  //  ClusterCenterRgb* _ClusterCenters;
 
     double _Epsilon;
 

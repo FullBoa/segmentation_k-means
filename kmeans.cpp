@@ -49,7 +49,7 @@ int **KMeans::Clustering(int parMaxIterationCount,
         PixelClustering();
 
         //Вычисление новых центров масс кластеров.
-        PixelRgb* newCenterPositions;
+        ClusterCenterRgb* newCenterPositions;
         newCenterPositions = NewCenterPositions();
 
         if (ClusterCenterChanged(_ClusterCenters, newCenterPositions))
@@ -74,7 +74,9 @@ int **KMeans::Clustering(int parMaxIterationCount,
 //parNewCenters - новые координаты центров масс
 //parDistancePrecision - точность определения изменения расстояния.
 //Перемещение центроидов меньше, чем на данное расстояние, изменением не считается.
-bool KMeans::ClusterCenterChanged(PixelRgb *parOldCenters, PixelRgb *parNewCenters, double parDistancePrecision)
+bool KMeans::ClusterCenterChanged(ClusterCenterRgb *parOldCenters,
+                                  ClusterCenterRgb *parNewCenters,
+                                  double parDistancePrecision)
 {
     bool changed = false;
 
@@ -89,18 +91,41 @@ bool KMeans::ClusterCenterChanged(PixelRgb *parOldCenters, PixelRgb *parNewCente
     return changed;
 }
 
+double KMeans::Distance(ClusterCenterRgb parFirstCenter,
+                        ClusterCenterRgb parSecondCenter)
+{
+    return sqrt((parFirstCenter.X - parSecondCenter.X)*(parFirstCenter.X - parSecondCenter.X)
+                + (parFirstCenter.Y - parSecondCenter.Y)*(parFirstCenter.Y - parSecondCenter.Y)
+                + (parFirstCenter.Red - parSecondCenter.Red)*(parFirstCenter.Red - parSecondCenter.Red)
+                + (parFirstCenter.Green - parSecondCenter.Green)*(parFirstCenter.Green - parSecondCenter.Green)
+                + (parFirstCenter.Blue - parSecondCenter.Blue)*(parFirstCenter.Blue - parSecondCenter.Blue));
+}
+
 //Нахождение расстояние между центроидом и отдельным пикселем
 //в двумерном пространстве и цветовой схеме RGB
 //parPixel - описание пикселя
 //parClusterCenter - описание центроида кластера
 //Возвращает расстояние между анализируемыми пикселем и центром кластера
-double KMeans::Distance(PixelRgb parPixel, PixelRgb parClusterCenter)
+double KMeans::Distance(PixelRgb parPixel, ClusterCenterRgb parClusterCenter)
 {
     return sqrt((parClusterCenter.X - parPixel.X)*(parClusterCenter.X - parPixel.X)
                 + (parClusterCenter.Y - parPixel.Y)*(parClusterCenter.Y - parPixel.Y)
                 + (parClusterCenter.Red - parPixel.Red)*(parClusterCenter.Red - parPixel.Red)
                 + (parClusterCenter.Green - parPixel.Green)*(parClusterCenter.Green - parPixel.Green)
                 + (parClusterCenter.Blue - parPixel.Blue)*(parClusterCenter.Blue - parPixel.Blue));
+}
+
+double KMeans::Distance(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ)
+{
+    PixelRgb pixel;
+
+    pixel.X = parPixelIndexI;
+    pixel.Y = parPixelIndexJ;
+    pixel.Red = qRed(_Image.pixel(parPixelIndexI,parPixelIndexJ));
+    pixel.Green = qGreen(_Image.pixel(parPixelIndexI,parPixelIndexJ));
+    pixel.Blue = qBlue(_Image.pixel(parPixelIndexI,parPixelIndexJ));
+
+    return Distance(pixel,_ClusterCenters[parClusterIndex]);
 }
 
 //Получение сегментируемого изображения
@@ -120,7 +145,7 @@ void KMeans::Init()
     }
 
     //Инициализация массива центроидов
-    _ClusterCenters = new PixelRgb[_ClusterCount];
+    _ClusterCenters = new ClusterCenterRgb[_ClusterCount];
     for (int i = 0; i < _ClusterCount; i++)
     {
         //переменная для получения целой части числа
@@ -147,10 +172,10 @@ int KMeans::LastIterationCount()
 }
 
 //Получение новых позиций центроидов
-PixelRgb* KMeans::NewCenterPositions()
+ClusterCenterRgb* KMeans::NewCenterPositions()
 {
     //Новые координаты центроида
-    PixelRgb* newCenterPositioins = new PixelRgb[_ClusterCount];
+    ClusterCenterRgb* newCenterPositioins = new ClusterCenterRgb[_ClusterCount];
 
     //Пикселей в кластере
     int* pixelInCluster = new int[_ClusterCount];
@@ -189,11 +214,11 @@ PixelRgb* KMeans::NewCenterPositions()
     {
         if (pixelInCluster[k] != 0)
         {
-            newCenterPositioins[k].X /= pixelInCluster[k];
-            newCenterPositioins[k].Y /= pixelInCluster[k];
-            newCenterPositioins[k].Red /= pixelInCluster[k];
-            newCenterPositioins[k].Green /= pixelInCluster[k];
-            newCenterPositioins[k].Blue /= pixelInCluster[k];
+            newCenterPositioins[k].X /= (double)pixelInCluster[k];
+            newCenterPositioins[k].Y /= (double)pixelInCluster[k];
+            newCenterPositioins[k].Red /= (double)pixelInCluster[k];
+            newCenterPositioins[k].Green /= (double)pixelInCluster[k];
+            newCenterPositioins[k].Blue /= (double)pixelInCluster[k];
         }
     }
 

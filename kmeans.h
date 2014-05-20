@@ -50,12 +50,17 @@ public:
     int** Clustering(int parMaxIterationCount = MAX_ITERATION_COUNT,
                      double parDistancePrecision = DEFAULT_DISTANCE_PRECISION);
 
+    static double Distance(ClusterCenterRgb parFirstCenter,
+                            ClusterCenterRgb parSecondCenter);
+
+    double Distance(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ);
+
     //Нахождение расстояние между центроидом и отдельным пикселем
     //в пространстве (X,Y,R,G,B)
     //parPixel - описание пикселя
     //parClusterCenter - описание центроида сегмета
     //Возвращает расстояние между анализируемыми пикселем и центром сегмента
-    static double Distance(PixelRgb parPixel, PixelRgb parClusterCenter);
+    static double Distance(PixelRgb parPixel, ClusterCenterRgb parClusterCenter);
 
     //Получение сегментируемого изображения
     QImage Image();
@@ -68,7 +73,7 @@ public:
 
 protected:
     //Центры кластеров
-    PixelRgb* _ClusterCenters;
+    ClusterCenterRgb* _ClusterCenters;
 
     //Количество кластеров
     uint _ClusterCount;
@@ -88,15 +93,15 @@ protected:
     //parNewCenters - новые координаты центров масс
     //parDistancePrecision - точность определения изменения расстояния.
     //Перемещение центроидов меньше, чем на данное расстояние, изменением не считается.
-    bool ClusterCenterChanged(PixelRgb* parOldCenters,
-                              PixelRgb* parNewCenters,
+    bool ClusterCenterChanged(ClusterCenterRgb *parOldCenters,
+                              ClusterCenterRgb *parNewCenters,
                               double parDistancePrecision = DEFAULT_DISTANCE_PRECISION);
 
     //Инициализация массивов центроидов и пикселей сегментируемого изображения
     void Init();
 
     //Получение новых позиций центроидов
-    PixelRgb* NewCenterPositions();
+    ClusterCenterRgb* NewCenterPositions();
 
     //Отнесение пикселя к сегментам
     void PixelClustering();

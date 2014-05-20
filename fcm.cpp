@@ -7,7 +7,15 @@
 FCM::FCM(int parClusterCount, QImage parImage, double parEpsilon, double parM) : KMeans (parClusterCount,parImage)
 {
     _Epsilon = parEpsilon;
-    _M = parM;
+
+    if (parM > 1)
+    {
+        _M = parM;
+    }
+    else
+    {
+        _M = 2;
+    }
 }
 
 int **FCM::Clustering(int parMaxIterationCount)
@@ -29,11 +37,13 @@ int **FCM::Clustering(int parMaxIterationCount)
         //Вычисление новых центров масс кластеров.
         _ClusterCenters = NewCenterPositions();
 
-        double newObjectiveFunctioinValue = ObjectiveFunction();
+        double newObjectiveFunctionValue = ObjectiveFunction();
+      //  qDebug() << "Objective FunctionValue = " << newObjectiveFunctionValue;
+      //  qDebug() << fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue);
 
-        if (fabs(objectiveFunctionValue - newObjectiveFunctioinValue) > _Epsilon)
+        if (fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue > _Epsilon))
         {
-            objectiveFunctionValue = newObjectiveFunctioinValue;
+            objectiveFunctionValue = newObjectiveFunctionValue;
         }
         else
         {
@@ -72,34 +82,7 @@ int **FCM::Clustering(int parMaxIterationCount)
     return pixels;
 }
 
-//Нахождение расстояние между центроидом и отдельным пикселем
-//в двумерном пространстве и цветовой схеме RGB
-//parPixel - описание пикселя
-//parClusterCenter - описание центроида кластера
-//Возвращает расстояние между анализируемыми пикселем и центром кластера
-double FCM::Distance(PixelRgb parPixel, ClusterCenterRgb parClusterCenter)
-{
-    return sqrt((parClusterCenter.X - parPixel.X)*(parClusterCenter.X - parPixel.X)
-                + (parClusterCenter.Y - parPixel.Y)*(parClusterCenter.Y - parPixel.Y)
-                + (parClusterCenter.Red - parPixel.Red)*(parClusterCenter.Red - parPixel.Red)
-                + (parClusterCenter.Green - parPixel.Green)*(parClusterCenter.Green - parPixel.Green)
-                + (parClusterCenter.Blue - parPixel.Blue)*(parClusterCenter.Blue - parPixel.Blue));
-}
 
-double FCM::Distance(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ)
-{
-    PixelRgb pixel;
-
-    pixel.X = parPixelIndexI;
-    pixel.Y = parPixelIndexJ;
-    pixel.Red = qRed(_Image.pixel(parPixelIndexI,parPixelIndexJ));
-    pixel.Green = qGreen(_Image.pixel(parPixelIndexI,parPixelIndexJ));
-    pixel.Blue = qBlue(_Image.pixel(parPixelIndexI,parPixelIndexJ));
-
-    return Distance(pixel,_ClusterCenters[parClusterIndex]);
-
-
-}
 
 void FCM::Init()
 {
@@ -183,7 +166,7 @@ ClusterCenterRgb* FCM::NewCenterPositions()
         }
 
         newCenterPositioins[k].X = numeratorX/denominator;
-        newCenterPositioins[k].Y = numeratorX/denominator;
+        newCenterPositioins[k].Y = numeratorY/denominator;
         newCenterPositioins[k].Red = numeratorRed/denominator;
         newCenterPositioins[k].Green = numeratorGreen/denominator;
         newCenterPositioins[k].Blue = numeratorBlue/denominator;

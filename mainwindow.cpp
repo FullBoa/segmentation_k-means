@@ -70,7 +70,7 @@ void MainWindow::Segmentation()
     pixels = segmentator.Clustering();
 
     int** pixelsFCM;
-    FCM segmentatorFCM(ui->sliderClusterCount->value(), _ImageSource,5,2);
+    FCM segmentatorFCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
     pixelsFCM = segmentatorFCM.Clustering(20);
 
     QRgb* colors = new QRgb[segmentator.ClusterCount()];
