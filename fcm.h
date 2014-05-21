@@ -20,8 +20,6 @@ public:
     double ObjectiveFunction();
 
 protected:
-    //Центры кластеров
-  //  ClusterCenterRgb* _ClusterCenters;
 
     double _Epsilon;
 
