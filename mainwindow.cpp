@@ -6,7 +6,10 @@
 
 #include "kmeans.h"
 #include "fcm.h"
+#include "pcm.h"
 #include "dialogresult.h"
+#include "QDebug"
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -65,16 +68,19 @@ void MainWindow::SelectImage()
 
 void MainWindow::Segmentation()
 {
+    qDebug() << "K-means run";
     int** pixels;
     KMeans segmentator(ui->sliderClusterCount->value(), _ImageSource);
     pixels = segmentator.Clustering();
 
+    qDebug() << "FCM run";
     int** pixelsFCM;
     FCM segmentatorFCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
     pixelsFCM = segmentatorFCM.Clustering(20);
 
+    qDebug() << "PCM run";
     int** pixelsPCM;
-    FCM segmentatorPCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
+    PCM segmentatorPCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
     pixelsPCM = segmentatorPCM.Clustering(20);
 
     QRgb* colors = new QRgb[segmentator.ClusterCount()];

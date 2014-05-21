@@ -58,6 +58,8 @@ int **KMeans::Clustering(int parMaxIterationCount,
         ClusterCenterRgb* newCenterPositions;
         newCenterPositions = NewCenterPositions();
 
+        qDebug() << "k-means iteration" << iterationCount;
+
         if (ClusterCenterChanged(_ClusterCenters, newCenterPositions))
         {
             delete _ClusterCenters;

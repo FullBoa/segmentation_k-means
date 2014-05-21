@@ -3,6 +3,8 @@
 #include "math.h"
 #include "fcm.h"
 
+#include "QDebug"
+
 PCM::PCM(int parClusterCount, QImage parImage, double parEpsilon, double parM)
     :KMeans(parClusterCount, parImage)
 {
@@ -38,8 +40,9 @@ int** PCM::Clustering(int parMaxIterationCount)
         _ClusterCenters = NewCenterPositions();
 
         double newObjectiveFunctionValue = ObjectiveFunction();
-      //  qDebug() << "Objective FunctionValue = " << newObjectiveFunctionValue;
-      //  qDebug() << fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue);
+        qDebug() << "pcm iteration " << iterationCount;
+        qDebug() << "Objective FunctionValue = " << newObjectiveFunctionValue;
+        qDebug() << fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue);
 
         if (fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue > _Epsilon))
         {
@@ -89,6 +92,7 @@ void PCM::Init(int parMaxIterationCount)
     FCM fcm(_ClusterCount,_Image,_Epsilon,_M);
 
     _ClusterCenters = fcm.GetClusterCenters(parMaxIterationCount);
+    _BandWidth = new double[_ClusterCount];
 
     for (int k=0; k<_ClusterCount; k++)
     {
