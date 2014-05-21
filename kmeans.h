@@ -39,6 +39,9 @@ public:
     //parImage - изображение для сегментации
     KMeans(int parClusterCount, QImage parImage);
 
+    //Получение центров кластеров
+    ClusterCenterRgb* ClusterCenters();
+
     //Получение количества кластеров
     int ClusterCount();
 
@@ -97,15 +100,15 @@ protected:
                               ClusterCenterRgb *parNewCenters,
                               double parDistancePrecision = DEFAULT_DISTANCE_PRECISION);
 
-    //Инициализация массивов центроидов и пикселей сегментируемого изображения
-    void Init();
-
     //Получение новых позиций центроидов
     ClusterCenterRgb* NewCenterPositions();
 
     //Отнесение пикселя к сегментам
     void PixelClustering();
 
+private:
+    //Инициализация массивов центроидов и пикселей сегментируемого изображения
+    void Init();
 
 };
 #endif // KMEANS_H

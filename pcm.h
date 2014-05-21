@@ -25,13 +25,16 @@ protected:
 
     double _Epsilon;
 
-    //Инициализация массивов центроидов и пикселей сегментируемого изображения
-    void Init();
+    bool _IsClustered;
 
     double _M;
 
     //Получение новых позиций центроидов
     ClusterCenterRgb* NewCenterPositions();
+
+private:
+    //Инициализация массивов центроидов и пикселей сегментируемого изображения
+    void Init(int parMaxIterationCount);
 };
 
 #endif // PCM_H

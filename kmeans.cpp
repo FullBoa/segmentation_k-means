@@ -19,6 +19,12 @@ KMeans::KMeans(int parClusterCount, QImage parImage)
     _LastIterationCount = 0;
 }
 
+//Получение центров кластеров
+ClusterCenterRgb* KMeans::ClusterCenters()
+{
+    return _ClusterCenters;
+}
+
 //Получение количества кластеров
 int KMeans::ClusterCount()
 {

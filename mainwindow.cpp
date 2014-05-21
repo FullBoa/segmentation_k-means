@@ -73,6 +73,10 @@ void MainWindow::Segmentation()
     FCM segmentatorFCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
     pixelsFCM = segmentatorFCM.Clustering(20);
 
+    int** pixelsPCM;
+    FCM segmentatorPCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
+    pixelsPCM = segmentatorPCM.Clustering(20);
+
     QRgb* colors = new QRgb[segmentator.ClusterCount()];
 
     for (int k = 0; k < segmentator.ClusterCount(); k++)
@@ -109,6 +113,8 @@ void MainWindow::Segmentation()
     QImage imageFCM;
     imageFCM = _ImageSource;
 
+    QImage imagePCM;
+    imagePCM = _ImageSource;
 
 
     int numberCluster;
@@ -121,6 +127,9 @@ void MainWindow::Segmentation()
 
             numberCluster = pixelsFCM[i][j];
             imageFCM.setPixel(i,j,colors[numberCluster]);
+
+            numberCluster = pixelsPCM[i][j];
+            imagePCM.setPixel(i,j,colors[numberCluster]);
         }
     }
 
@@ -135,6 +144,12 @@ void MainWindow::Segmentation()
                        segmentatorFCM.ClusterCount(),
                        imageFCM,
                            "FCM");
+
+    DialogResult* resultsPCM = new DialogResult();
+    resultsPCM->ShowResult(segmentatorPCM.LastIterationCount(),
+                       segmentatorPCM.ClusterCount(),
+                       imagePCM,
+                           "PCM");
     //ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
                                          //                               Qt::KeepAspectRatio));
 }

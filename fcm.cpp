@@ -16,6 +16,8 @@ FCM::FCM(int parClusterCount, QImage parImage, double parEpsilon, double parM) :
     {
         _M = 2;
     }
+
+    _IsClustered = false;
 }
 
 int **FCM::Clustering(int parMaxIterationCount)
@@ -54,6 +56,8 @@ int **FCM::Clustering(int parMaxIterationCount)
 
     _LastIterationCount = iterationCount;
 
+    _IsClustered = true;
+
     int** pixels = new int*[_Image.width()];
     for (int i=0; i < _Image.width(); i++)
     {
@@ -69,10 +73,10 @@ int **FCM::Clustering(int parMaxIterationCount)
 
             for (int k=1; k<_ClusterCount; k++)
             {
-                double currentFM = MembershipFunction(k,i,j);
-                if (currentFM > maxMF)
+                double currentMF = MembershipFunction(k,i,j);
+                if (currentMF > maxMF)
                 {
-                    maxMF = currentFM;
+                    maxMF = currentMF;
                     pixels[i][j] = k;
                 }
             }
@@ -80,6 +84,47 @@ int **FCM::Clustering(int parMaxIterationCount)
     }
 
     return pixels;
+}
+
+ClusterCenterRgb* FCM::GetClusterCenters(int parMaxIterationCount)
+{
+    //Инициализация центроидов и массива принадлежности пикселей сегментам
+    Init();
+
+    //флаг окончания сегментации
+    bool done = false;
+
+    //Количество пройденных итераций
+    int iterationCount = 0;
+
+    double objectiveFunctionValue = ObjectiveFunction();
+    do
+    {
+        iterationCount++;
+
+        //Вычисление новых центров масс кластеров.
+        _ClusterCenters = NewCenterPositions();
+
+        double newObjectiveFunctionValue = ObjectiveFunction();
+      //  qDebug() << "Objective FunctionValue = " << newObjectiveFunctionValue;
+      //  qDebug() << fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue);
+
+        if (fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue > _Epsilon))
+        {
+            objectiveFunctionValue = newObjectiveFunctionValue;
+        }
+        else
+        {
+            done = true;
+        }
+    }
+    while(!done && (iterationCount < parMaxIterationCount));
+
+    _LastIterationCount = iterationCount;
+
+    _IsClustered = true;
+
+    return _ClusterCenters;
 }
 
 
