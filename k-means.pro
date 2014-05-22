@@ -15,13 +15,15 @@ SOURCES += main.cpp\
     kmeans.cpp \
     dialogresult.cpp \
     fcm.cpp \
-    pcm.cpp
+    pcm.cpp \
+    pfcm.cpp
 
 HEADERS  += mainwindow.h \
     kmeans.h \
     dialogresult.h \
     fcm.h \
-    pcm.h
+    pcm.h \
+    pfcm.h
 
 FORMS    += mainwindow.ui \
     dialogresult.ui
