@@ -42,9 +42,9 @@ int **FCM::Clustering(int parMaxIterationCount)
         double newObjectiveFunctionValue = ObjectiveFunction();
         qDebug() << "fcm iteration " << iterationCount;
         qDebug() << "Objective FunctionValue = " << newObjectiveFunctionValue;
-        qDebug() << fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue);
+        qDebug() << fabs(objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue;
 
-        if (fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue > _Epsilon))
+        if (fabs(objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue > _Epsilon)
         {
             objectiveFunctionValue = newObjectiveFunctionValue;
         }

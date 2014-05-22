@@ -51,9 +51,9 @@ int** PFCM::Clustering(int parMaxIterationCount)
         double newObjectiveFunctionValue = ObjectiveFunction();
         qDebug() << "pfcm iteration " << iterationCount;
         qDebug() << "Objective Function Value = " << newObjectiveFunctionValue;
-        qDebug() << fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue);
+        qDebug() << fabs(objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue;
 
-        if (fabs((objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue > _Epsilon))
+        if (fabs(objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue > _Epsilon)
         {
             objectiveFunctionValue = newObjectiveFunctionValue;
         }

@@ -7,6 +7,7 @@
 #include "kmeans.h"
 #include "fcm.h"
 #include "pcm.h"
+#include "pfcm.h"
 #include "dialogresult.h"
 #include "QDebug"
 
@@ -83,6 +84,11 @@ void MainWindow::Segmentation()
     PCM segmentatorPCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
     pixelsPCM = segmentatorPCM.Clustering(20);
 
+    qDebug() << "PFCM run";
+    int** pixelsPFCM;
+    PFCM segmentatorPFCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2,2);
+    pixelsPFCM = segmentatorPFCM.Clustering(20);
+
     QRgb* colors = new QRgb[segmentator.ClusterCount()];
 
     for (int k = 0; k < segmentator.ClusterCount(); k++)
@@ -109,10 +115,6 @@ void MainWindow::Segmentation()
         }
     }
 
-    /*ui->labelIterationCount->setText(QString::fromUtf8("Выполено за ")
-                                     + QString::number(segmentator.LastIterationCount())
-                                     + QString::fromUtf8(" итераций"));*/
-
     QImage newImage;
     newImage = _ImageSource;
 
@@ -121,6 +123,9 @@ void MainWindow::Segmentation()
 
     QImage imagePCM;
     imagePCM = _ImageSource;
+
+    QImage imagePFCM;
+    imagePFCM = _ImageSource;
 
 
     int numberCluster;
@@ -136,6 +141,9 @@ void MainWindow::Segmentation()
 
             numberCluster = pixelsPCM[i][j];
             imagePCM.setPixel(i,j,colors[numberCluster]);
+
+            numberCluster = pixelsPFCM[i][j];
+            imagePFCM.setPixel(i,j,colors[numberCluster]);
         }
     }
 
@@ -156,6 +164,12 @@ void MainWindow::Segmentation()
                        segmentatorPCM.ClusterCount(),
                        imagePCM,
                            "PCM");
+
+    DialogResult* resultsPFCM = new DialogResult();
+    resultsPFCM->ShowResult(segmentatorPFCM.LastIterationCount(),
+                       segmentatorPFCM.ClusterCount(),
+                       imagePFCM,
+                           "PFCM");
     //ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
                                          //                               Qt::KeepAspectRatio));
 }
