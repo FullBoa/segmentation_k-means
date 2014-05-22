@@ -31,7 +31,7 @@ protected:
 
     double _Mu;
 
-    double Mw;
+    double _Mw;
 
     //Получение новых позиций центроидов
     ClusterCenterRgb* NewCenterPositions();
