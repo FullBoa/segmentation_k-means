@@ -16,6 +16,8 @@ KMeans::KMeans(int parClusterCount, QImage parImage)
 
     _Pixels = NULL;
 
+    _ClusterCenters = NULL;
+
     _LastIterationCount = 0;
 }
 
@@ -93,6 +95,7 @@ bool KMeans::ClusterCenterChanged(ClusterCenterRgb *parOldCenters,
         if (Distance(parOldCenters[k], parNewCenters[k]) > parDistancePrecision)
         {
             changed = true;
+            break;
         }
     }
 
@@ -273,5 +276,13 @@ void KMeans::PixelClustering()
             //Приписываем пиксель кластеру
             _Pixels[i][j] = numberNearestCluster;
         }
+    }
+}
+
+void KMeans::SetClusterCenters(ClusterCenterRgb *parClusterCenters)
+{
+    if (parClusterCenters != 0)
+    {
+        _ClusterCenters = parClusterCenters;
     }
 }

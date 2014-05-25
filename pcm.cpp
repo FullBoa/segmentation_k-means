@@ -91,7 +91,15 @@ void PCM::Init(int parMaxIterationCount)
 {
     FCM fcm(_ClusterCount,_Image,_Epsilon,_M);
 
-    _ClusterCenters = fcm.GetClusterCenters(parMaxIterationCount);
+    if (_ClusterCenters == NULL)
+    {
+        _ClusterCenters = fcm.GetClusterCenters(parMaxIterationCount);
+    }
+    else
+    {
+        fcm.SetClusterCenters(_ClusterCenters);
+    }
+
     _BandWidth = new double[_ClusterCount];
 
     for (int k=0; k<_ClusterCount; k++)

@@ -71,6 +71,9 @@ public:
     //Получение количества итераций при последний сегментации
     int LastIterationCount();
 
+    //Задание значений центров кластеров
+    void SetClusterCenters(ClusterCenterRgb* parClusterCenters);
+
     //Задание количества сегментов, на которое нужно будет разбить изображение
     void SetClusterCount(int parClusterCount);
 
