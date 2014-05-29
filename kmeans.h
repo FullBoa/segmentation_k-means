@@ -1,20 +1,8 @@
 #ifndef KMEANS_H
 #define KMEANS_H
 
-#include <QImage>
-
 //Структура для описание цветного пикселя
 struct PixelRgb
-{
-    int X;
-    int Y;
-    uint Red;
-    uint Green;
-    uint Blue;
-};
-
-//Структура для описания центра кластера цветных пикселей
-struct ClusterCenterRgb
 {
     double X;
     double Y;
@@ -28,86 +16,116 @@ class KMeans
 public:
 
     //Максимальное количество итерации при сегментации
-    static int const MAX_ITERATION_COUNT = 100;
+    static int const DEFAULT_MAX_ITERATION_COUNT = 100;
 
     //Значение изменения рассояния по умолчанию, при изменении позиции цетроидов меньше которого,
     //считается, что изменений не было
-    static double const DEFAULT_DISTANCE_PRECISION = 5;
+    static double const DEFAULT_PRECISION = 0.001;
 
     //Конструктор класса
     //parClusterCount - количество кластеров для поиска
-    //parImage - изображение для сегментации
-    KMeans(int parClusterCount, QImage parImage);
+    //parPixels - пиксели сегментируемого изображения
+    //parWidth - ширина изображения
+    //parHeight - высота изображения
+    //parMaxIterationCount - максимальное количества итераций при сегментации
+    //parPrecision - точность вычисления целевой функции
+    KMeans(int parClusterCount,
+           PixelRgb** parPixels,
+           int parWidth,
+           int parHeight,
+           int parMaxIterationCount = DEFAULT_MAX_ITERATION_COUNT,
+           int parPrecision = DEFAULT_PRECISION);
+
+    //Очистить значения центров кластеров
+    void ClearClusterCenters();
 
     //Получение центров кластеров
-    ClusterCenterRgb* ClusterCenters();
+    PixelRgb* ClusterCenters();
 
     //Получение количества кластеров
     int ClusterCount();
 
     //Сегментация изображения
     //Возвращает двумерных массив принадлежности пикселя сегментам
-    //parMaxIterationCount - максимальное количество итераций при сегментации
-    //parDistancePrecision - при изменении позиции центроидов меньше, чем на данное расстояние,
-    //считается, что изменений не было.
-    int** Clustering(int parMaxIterationCount = MAX_ITERATION_COUNT,
-                     double parDistancePrecision = DEFAULT_DISTANCE_PRECISION);
+    int** Clustering();
 
-    static double Distance(ClusterCenterRgb parFirstCenter,
-                            ClusterCenterRgb parSecondCenter);
+    //Расчет растояния между двумя пикселями
+    static double Distance(PixelRgb parFirstPixel,
+                            PixelRgb parSecondPixel);
 
-    double Distance(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ);
+    //Расчет растояния между центром кластера с индексом parClusterIndex
+    // и пикселем в позиции (parColumnIndex, parRowIndex)
+    double Distance(int parClusterIndex, int parColumnIndex, int parRowIndex);
 
-    //Нахождение расстояние между центроидом и отдельным пикселем
-    //в пространстве (X,Y,R,G,B)
-    //parPixel - описание пикселя
-    //parClusterCenter - описание центроида сегмета
-    //Возвращает расстояние между анализируемыми пикселем и центром сегмента
-    static double Distance(PixelRgb parPixel, ClusterCenterRgb parClusterCenter);
-
-    //Получение сегментируемого изображения
-    QImage Image();
+    //Найти позиции центров кластеров
+    void FindClusterCenters();
 
     //Получение количества итераций при последний сегментации
     int LastIterationCount();
 
+    //Получение значения максимального количества итераций
+    int MaxIterationCount();
+
+    //Расчет значения целевой функции
+    double ObjectiveFunction();
+
+    //Получение пиксели сегментируемого изображения
+    PixelRgb** Pixels();
+
+    //Получение значения точности вычисления целевой фунции
+    double Precision();
+
     //Задание значений центров кластеров
-    void SetClusterCenters(ClusterCenterRgb* parClusterCenters);
+    void SetClusterCenters(PixelRgb* parClusterCenters);
 
     //Задание количества сегментов, на которое нужно будет разбить изображение
     void SetClusterCount(int parClusterCount);
 
+    //Установка значения максимального количества итераций
+    void SetMaxIterationCount(int parMaxIterationCount);
+
+    //Установка значения точности вычисления целевой функции
+    void SetPrecision(double parPrecision);
+
 protected:
+    //Центры кластеров были найдены
+    bool _CentersFound;
+
     //Центры кластеров
-    ClusterCenterRgb* _ClusterCenters;
+    PixelRgb* _ClusterCenters;
 
     //Количество кластеров
     uint _ClusterCount;
 
-    //Сегментируемое изображение
-    QImage _Image;
+    //Высота изображения
+    int _Height;
 
     //Количество итераций при последней сегментации
     int _LastIterationCount;
 
-    //Кластеризуемые пиксели
-    int** _Pixels;
-
-
-    //Проверка, изменились ли координаты центроидов кластеров
-    //parOldCenters - старые координаты центроидов
-    //parNewCenters - новые координаты центров масс
-    //parDistancePrecision - точность определения изменения расстояния.
-    //Перемещение центроидов меньше, чем на данное расстояние, изменением не считается.
-    bool ClusterCenterChanged(ClusterCenterRgb *parOldCenters,
-                              ClusterCenterRgb *parNewCenters,
-                              double parDistancePrecision = DEFAULT_DISTANCE_PRECISION);
+    //Максимальное количество итераций сегментации
+    int _MaxIterationCount;
 
     //Получение новых позиций центроидов
-    ClusterCenterRgb* NewCenterPositions();
+    PixelRgb* NewCenterPositions();
+
+    //Пиксели были распределены по кластерам
+    bool _PixelsClustered;
 
     //Отнесение пикселя к сегментам
     void PixelClustering();
+
+    //Принадлежность пикселей к кластерам
+    int** _PixelLabels;
+
+    //Пиксели сегментируемого изображения
+    PixelRgb** _Pixels;
+
+    //Точность вычисления целевой функции
+    double _Precision;
+
+    //Ширина изображения
+    int _Width;
 
 private:
     //Инициализация массивов центроидов и пикселей сегментируемого изображения
