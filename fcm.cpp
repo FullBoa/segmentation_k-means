@@ -10,7 +10,7 @@ FCM::FCM(int parClusterCount,
          int parHeight,
          double parDegree,
          int parMaxIterationCount,
-         int parPrecision)
+         double parPrecision)
     : KMeans (parClusterCount, parPixels, parWidth,parHeight,parMaxIterationCount,parPrecision)
 {
 
@@ -53,7 +53,7 @@ double FCM::MembershipFunction(int parClusterIndex, int parColumnIndex, int parR
 PixelRgb *FCM::NewCenterPositions()
 {
     //Новые координаты центроида
-    PixelRgb* newCenterPositioins = new ClusterCenterRgb[_ClusterCount];
+    PixelRgb* newCenterPositioins = new PixelRgb[_ClusterCount];
 
     //Для каждого кластера
     for (int k=0; k < _ClusterCount; k++)

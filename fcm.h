@@ -3,7 +3,7 @@
 
 #include "kmeans.h"
 
-class FCM : public KMeans
+class FCM : virtual public KMeans
 {
 public:
 
@@ -15,7 +15,7 @@ public:
         int parHeight,
         double parDegree = DEFAULT_DEGREE,
         int parMaxIterationCount = DEFAULT_MAX_ITERATION_COUNT,
-        int parPrecision = DEFAULT_PRECISION);
+        double parPrecision = DEFAULT_PRECISION);
 
     double MembershipFunction(int parClusterIndex, int parColumnIndex, int parRowIndex);
 
@@ -23,7 +23,7 @@ public:
 
 protected:
 
-    double _DegreeFM;
+    double _DegreeMF;
 
     //Получение новых позиций центроидов
     virtual PixelRgb* NewCenterPositions();

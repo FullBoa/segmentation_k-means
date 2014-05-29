@@ -34,7 +34,7 @@ public:
            int parWidth,
            int parHeight,
            int parMaxIterationCount = DEFAULT_MAX_ITERATION_COUNT,
-           int parPrecision = DEFAULT_PRECISION);
+           double parPrecision = DEFAULT_PRECISION);
 
     //Очистить значения центров кластеров
     void ClearClusterCenters();
@@ -95,7 +95,7 @@ protected:
     PixelRgb* _ClusterCenters;
 
     //Количество кластеров
-    uint _ClusterCount;
+    int _ClusterCount;
 
     //Высота изображения
     int _Height;

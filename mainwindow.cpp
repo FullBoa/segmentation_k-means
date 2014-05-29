@@ -73,33 +73,160 @@ void MainWindow::SelectImage()
 
 void MainWindow::Segmentation()
 {
+    //Подготовка данных для сегментации
+    int clusterCount = ui->sliderClusterCount->value();
+
+    int width = _ImageSource.width();
+    int height = _ImageSource.height();
+
+    PixelRgb** image = new PixelRgb*[width];
+    for (int i=0; i < width; i++)
+    {
+        image[i] = new PixelRgb[height];
+    }
+
+    //Нормализация значений характеристик пикселей
+    for (int i=0; i<width; i++)
+    {
+        for (int j=0; j<height; j++)
+        {
+            image[i][j].X = (double)i/(double)width;
+            image[i][j].Y = (double)j/(double)height;
+            image[i][j].Red = (double)qRed(_ImageSource.pixel(i,j))/255.0;
+            image[i][j].Green = (double)qGreen(_ImageSource.pixel(i,j))/255.0;
+            image[i][j].Blue = (double)qBlue(_ImageSource.pixel(i,j))/255.0;
+        }
+    }
+
     qDebug() << "K-means run";
     int** pixels;
-    KMeans segmentator(ui->sliderClusterCount->value(), _ImageSource);
+    KMeans segmentator(clusterCount,image,width, height);
     pixels = segmentator.Clustering();
 
     qDebug() << "FCM run";
     int** pixelsFCM;
-    FCM segmentatorFCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
-    pixelsFCM = segmentatorFCM.Clustering(20);
+    FCM segmentatorFCM(clusterCount,image,width,height);
+    pixelsFCM = segmentatorFCM.Clustering();
 
-    ClusterCenterRgb* clusterCentersFCM = segmentatorFCM.ClusterCenters();
+    PixelRgb* clusterCentersFCM = segmentatorFCM.ClusterCenters();
 
     qDebug() << "PCM run";
     int** pixelsPCM;
-    PCM segmentatorPCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2);
+    PCM segmentatorPCM(clusterCount,image,width,height);
     segmentatorPCM.SetClusterCenters(clusterCentersFCM);
-    pixelsPCM = segmentatorPCM.Clustering(20);
+    pixelsPCM = segmentatorPCM.Clustering();
 
     qDebug() << "PFCM run";
     int** pixelsPFCM;
-    PFCM segmentatorPFCM(ui->sliderClusterCount->value(), _ImageSource,0.001,2,2);
+    PFCM segmentatorPFCM(clusterCount,image,width,height);
     segmentatorPFCM.SetClusterCenters(clusterCentersFCM);
-    pixelsPFCM = segmentatorPFCM.Clustering(20);
+    pixelsPFCM = segmentatorPFCM.Clustering();
 
 
-    qDebug() << "SVM run";
+   // qDebug() << "SVM run";
 
+
+
+
+    QRgb* colors = new QRgb[clusterCount];
+
+    for (int k = 0; k < clusterCount; k++)
+    {
+        //Red
+        if (k % 4 == 0)
+        {
+            colors[k] = qRgb(255 - 32 * k / 4, 0, 0);
+        }
+        //White, gray, black
+        else if ((k + 1) % 4 == 0)
+        {
+            colors[k] = qRgb(255 - 32 * (k+1) / 4, 255 - 32 * (k+1) / 4, 255 - 32 * (k+1) / 4);
+        }
+        //Blue
+        else if ((k + 2) % 4 == 0)
+        {
+            colors[k] = qRgb(0, 0, 255 - 32 * (k+2) / 4);
+        }
+        //Green
+        else
+        {
+            colors[k] = qRgb(0, 255 - 32 * (k+3) / 4, 0);
+        }
+    }
+
+    QImage newImage;
+    newImage = _ImageSource;
+
+    QImage imageSVM;
+    imageSVM = _ImageSource;
+
+    QImage imageFCM;
+    imageFCM = _ImageSource;
+
+    QImage imagePCM;
+    imagePCM = _ImageSource;
+
+    QImage imagePFCM;
+    imagePFCM = _ImageSource;
+
+
+    int numberCluster;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            numberCluster = pixels[i][j];
+            newImage.setPixel(i,j,colors[numberCluster]);
+
+            numberCluster = pixelsFCM[i][j];
+            imageFCM.setPixel(i,j,colors[numberCluster]);
+
+            numberCluster = pixelsPCM[i][j];
+            imagePCM.setPixel(i,j,colors[numberCluster]);
+
+            numberCluster = pixelsPFCM[i][j];
+            imagePFCM.setPixel(i,j,colors[numberCluster]);
+
+           /* numberCluster = pixelsSVM[i][j];
+            imageSVM.setPixel(i,j,colors[numberCluster]);*/
+        }
+    }
+
+    DialogResult* results = new DialogResult();
+    results->ShowResult(segmentator.LastIterationCount(),
+                       segmentator.ClusterCount(),
+                       newImage,
+                        "k-means");
+
+    DialogResult* resultsFCM = new DialogResult();
+    resultsFCM->ShowResult(segmentatorFCM.LastIterationCount(),
+                       segmentatorFCM.ClusterCount(),
+                       imageFCM,
+                           "FCM");
+
+    DialogResult* resultsPCM = new DialogResult();
+    resultsPCM->ShowResult(segmentatorPCM.LastIterationCount(),
+                       segmentatorPCM.ClusterCount(),
+                       imagePCM,
+                           "PCM");
+
+    DialogResult* resultsPFCM = new DialogResult();
+    resultsPFCM->ShowResult(segmentatorPFCM.LastIterationCount(),
+                       segmentatorPFCM.ClusterCount(),
+                       imagePFCM,
+                           "PFCM");
+
+ /*   DialogResult* resultsSVM = new DialogResult();
+    resultsSVM->ShowResult(1,
+                       ui->sliderClusterCount->value(),
+                       imageSVM,
+                           "SVM");*/
+    //ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
+                                         //                               Qt::KeepAspectRatio));
+}
+
+/*int** MainWindow::SegmentationSvm(int **parPixels, ClusterCenterRgb* parClusterCenters)
+{
     //Разделение выборки на обучающую и тестовую
     QList<double>* distances= new QList<double>[ui->sliderClusterCount->value()]();
 
@@ -108,7 +235,7 @@ void MainWindow::Segmentation()
     {
         for (int j=0; j<_ImageSource.height(); j++)
         {
-            distances[pixels[i][j]].append(segmentator.Distance(pixels[i][j],i,j));
+            distances[parPixels[i][j]].append(segmentator.Distance(parPixels[i][j],i,j));
         }
     }
 
@@ -143,9 +270,9 @@ void MainWindow::Segmentation()
         for (int j=0; j<_ImageSource.height(); j++)
         {
             //Точка расположена близко к центру кластера
-            if (segmentator.Distance(pixels[i][j],i,j) <= averageDistants[pixels[i][j]])
+            if (segmentator.Distance(parPixels[i][j],i,j) <= averageDistants[parPixels[i][j]])
             {
-                pixelsSVM[i][j] = pixels[i][j];
+                pixelsSVM[i][j] = parPixels[i][j];
 
                 svm_node* node = new svm_node[6]; //5 под размерность и 1 под (индекс -1)
                 node[0].index = 1;
@@ -166,7 +293,7 @@ void MainWindow::Segmentation()
                 node[5].index=-1;
 
                 trainList.append(node);
-                labelList.append(pixels[i][j]);
+                labelList.append(parPixels[i][j]);
 
                 trainSetSize++;
             }
@@ -246,101 +373,4 @@ void MainWindow::Segmentation()
             }
         }
     }
-
-
-    QRgb* colors = new QRgb[segmentator.ClusterCount()];
-
-    for (int k = 0; k < segmentator.ClusterCount(); k++)
-    {
-        //Red
-        if (k % 4 == 0)
-        {
-            colors[k] = qRgb(255 - 32 * k / 4, 0, 0);
-        }
-        //White, gray, black
-        else if ((k + 1) % 4 == 0)
-        {
-            colors[k] = qRgb(255 - 32 * (k+1) / 4, 255 - 32 * (k+1) / 4, 255 - 32 * (k+1) / 4);
-        }
-        //Blue
-        else if ((k + 2) % 4 == 0)
-        {
-            colors[k] = qRgb(0, 0, 255 - 32 * (k+2) / 4);
-        }
-        //Green
-        else
-        {
-            colors[k] = qRgb(0, 255 - 32 * (k+3) / 4, 0);
-        }
-    }
-
-    QImage newImage;
-    newImage = _ImageSource;
-
-    QImage imageSVM;
-    imageSVM = _ImageSource;
-
-    QImage imageFCM;
-    imageFCM = _ImageSource;
-
-    QImage imagePCM;
-    imagePCM = _ImageSource;
-
-    QImage imagePFCM;
-    imagePFCM = _ImageSource;
-
-
-    int numberCluster;
-    for (int i = 0; i < segmentator.Image().width(); i++)
-    {
-        for (int j = 0; j < segmentator.Image().height(); j++)
-        {
-            numberCluster = pixels[i][j];
-            newImage.setPixel(i,j,colors[numberCluster]);
-
-            numberCluster = pixelsFCM[i][j];
-            imageFCM.setPixel(i,j,colors[numberCluster]);
-
-            numberCluster = pixelsPCM[i][j];
-            imagePCM.setPixel(i,j,colors[numberCluster]);
-
-            numberCluster = pixelsPFCM[i][j];
-            imagePFCM.setPixel(i,j,colors[numberCluster]);
-
-            numberCluster = pixelsSVM[i][j];
-            imageSVM.setPixel(i,j,colors[numberCluster]);
-        }
-    }
-
-    DialogResult* results = new DialogResult();
-    results->ShowResult(segmentator.LastIterationCount(),
-                       segmentator.ClusterCount(),
-                       newImage,
-                        "k-means");
-
-    DialogResult* resultsFCM = new DialogResult();
-    resultsFCM->ShowResult(segmentatorFCM.LastIterationCount(),
-                       segmentatorFCM.ClusterCount(),
-                       imageFCM,
-                           "FCM");
-
-    DialogResult* resultsPCM = new DialogResult();
-    resultsPCM->ShowResult(segmentatorPCM.LastIterationCount(),
-                       segmentatorPCM.ClusterCount(),
-                       imagePCM,
-                           "PCM");
-
-    DialogResult* resultsPFCM = new DialogResult();
-    resultsPFCM->ShowResult(segmentatorPFCM.LastIterationCount(),
-                       segmentatorPFCM.ClusterCount(),
-                       imagePFCM,
-                           "PFCM");
-
-    DialogResult* resultsSVM = new DialogResult();
-    resultsSVM->ShowResult(1,
-                       ui->sliderClusterCount->value(),
-                       imageSVM,
-                           "SVM");
-    //ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
-                                         //                               Qt::KeepAspectRatio));
-}
+}*/
