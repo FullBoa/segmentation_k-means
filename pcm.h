@@ -6,35 +6,37 @@
 class PCM : public KMeans
 {
 public:
-    PCM(int parClusterCount, QImage parImage, double parEpsilon, double parM);
 
-    //Сегментация изображения
-    //Возвращает двумерных массив принадлежности пикселя сегментам
-    //parMaxIterationCount - максимальное количество итераций при сегментации
-    //parDistancePrecision - при изменении позиции центроидов меньше, чем на данное расстояние,
-    //считается, что изменений не было.
-    int** Clustering(int parMaxIterationCount = MAX_ITERATION_COUNT);
+    static double const DEFAULT_DEGREE = 2;
+
+    PCM(int parClusterCount,
+        PixelRgb** parPixels,
+        int parWidth,
+        int parHeight,
+        double parDegree = DEFAULT_DEGREE,
+        int parMaxIterationCount = DEFAULT_MAX_ITERATION_COUNT,
+        int parPrecision = DEFAULT_PRECISION);
 
     double ObjectiveFunction();
 
-    double TypicalityFunction(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ);
+    double TypicalityFunction(int parClusterIndex, int parColumnIndex, int parRowIndex);
 
 protected:
 
     double* _BandWidth;
 
-    double _Epsilon;
+    double _DegreeTF;
 
-    bool _IsClustered;
-
-    double _M;
+    //Инициализация массивов центроидов и пикселей сегментируемого изображения
+    virtual void Init();
 
     //Получение новых позиций центроидов
-    ClusterCenterRgb* NewCenterPositions();
+    virtual PixelRgb* NewCenterPositions();
+
+    //Отнесение пикселя к сегментам
+    virtual void PixelClustering();
 
 private:
-    //Инициализация массивов центроидов и пикселей сегментируемого изображения
-    void Init(int parMaxIterationCount);
 };
 
 #endif // PCM_H

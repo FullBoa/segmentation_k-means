@@ -7,3 +7,4 @@ ui_mainwindow.h
 ui_dialogresult.h
 *~
 *.exe
+*.autosave

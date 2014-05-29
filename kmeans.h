@@ -67,7 +67,7 @@ public:
     int MaxIterationCount();
 
     //Расчет значения целевой функции
-    double ObjectiveFunction();
+    virtual double ObjectiveFunction();
 
     //Получение пиксели сегментируемого изображения
     PixelRgb** Pixels();
@@ -100,6 +100,9 @@ protected:
     //Высота изображения
     int _Height;
 
+    //Инициализация массивов центроидов и пикселей сегментируемого изображения
+    virtual void Init();
+
     //Количество итераций при последней сегментации
     int _LastIterationCount;
 
@@ -107,13 +110,13 @@ protected:
     int _MaxIterationCount;
 
     //Получение новых позиций центроидов
-    PixelRgb* NewCenterPositions();
+    virtual PixelRgb* NewCenterPositions();
 
     //Пиксели были распределены по кластерам
     bool _PixelsClustered;
 
     //Отнесение пикселя к сегментам
-    void PixelClustering();
+    virtual void PixelClustering();
 
     //Принадлежность пикселей к кластерам
     int** _PixelLabels;
@@ -126,10 +129,5 @@ protected:
 
     //Ширина изображения
     int _Width;
-
-private:
-    //Инициализация массивов центроидов и пикселей сегментируемого изображения
-    void Init();
-
 };
 #endif // KMEANS_H

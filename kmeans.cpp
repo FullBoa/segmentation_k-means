@@ -92,7 +92,7 @@ double KMeans::Distance(int parClusterIndex,
 }
 
 //Найти позиции центров кластеров
-void KMeans::FindClusterCenters()
+KMeans::FindClusterCenters()
 {
     //Инициализация центроидов и массива принадлежности пикселей сегментам
     Init();
@@ -145,23 +145,27 @@ void KMeans::Init()
     //Инициализация массива центроидов
     if (_ClusterCenters == NULL)
     {
-        _ClusterCenters = new ClusterCenterRgb[_ClusterCount];
+        _ClusterCenters = new PixelRgb[_ClusterCount];
         for (int i = 0; i < _ClusterCount; i++)
         {
             //переменная для получения целой части числа
             double* intPart = new double;
             *intPart = 0;
 
-            modf(qrand() / (double) INT_MAX * _Image.width(), intPart);
-            _ClusterCenters[i].X = (int) *intPart;
+            int columnIndex;
+            int rowIndex;
 
-            modf(qrand() / (double) INT_MAX * _Image.height(), intPart);
-            _ClusterCenters[i].Y = (int) *intPart;\
+            modf(qrand() / (double) INT_MAX * _Width, intPart);
+            columnIndex = (int) *intPart;
 
-            QRgb pixel = _Image.pixel(_ClusterCenters[i].X, _ClusterCenters[i].Y);
-            _ClusterCenters[i].Red = qRed(pixel);
-            _ClusterCenters[i].Green = qGreen(pixel);
-            _ClusterCenters[i].Blue = qBlue(pixel);
+            modf(qrand() / (double) INT_MAX * _Height, intPart);
+            rowIndex = (int) *intPart;
+
+            _ClusterCenters[i].X = _Pixels[columnIndex][rowIndex].X;
+            _ClusterCenters[i].Y = _Pixels[columnIndex][rowIndex].Y;
+            _ClusterCenters[i].Red = _Pixels[columnIndex][rowIndex].Red;
+            _ClusterCenters[i].Green = _Pixels[columnIndex][rowIndex].Green;
+            _ClusterCenters[i].Blue = _Pixels[columnIndex][rowIndex].Blue;
         }
     }
 }

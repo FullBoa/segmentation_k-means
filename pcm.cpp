@@ -5,95 +5,40 @@
 
 #include "QDebug"
 
-PCM::PCM(int parClusterCount, QImage parImage, double parEpsilon, double parM)
-    :KMeans(parClusterCount, parImage)
+PCM::PCM(int parClusterCount,
+         PixelRgb **parPixels,
+         int parWidth,
+         int parHeight,
+         double parDegree,
+         int parMaxIterationCount,
+         int parPrecision)
+    : KMeans (parClusterCount, parPixels, parWidth,parHeight,parMaxIterationCount,parPrecision)
 {
-    if (parM > 1)
+
+    if (parDegree > 1)
     {
-        _M = parM;
+        _DegreeTF = parDegree;
     }
     else
     {
-        _M = 2;
+        _DegreeTF = DEFAULT_DEGREE;
     }
-
-    _Epsilon = parEpsilon;
 }
 
-int** PCM::Clustering(int parMaxIterationCount)
+void PCM::Init()
 {
-    //Инициализация центроидов и массива принадлежности пикселей сегментам
-    Init(parMaxIterationCount);
-
-    //флаг окончания сегментации
-    bool done = false;
-
-    //Количество пройденных итераций
-    int iterationCount = 0;
-
-    double objectiveFunctionValue = ObjectiveFunction();
-    do
+    //Инициализация массива номеров кластеров для каждого пикселя
+    _PixelLabels = new int*[_Width];
+    for (int i=0; i < _Width; i++)
     {
-        iterationCount++;
-
-        //Вычисление новых центров масс кластеров.
-        _ClusterCenters = NewCenterPositions();
-
-        double newObjectiveFunctionValue = ObjectiveFunction();
-        qDebug() << "pcm iteration " << iterationCount;
-        qDebug() << "Objective FunctionValue = " << newObjectiveFunctionValue;
-        qDebug() << fabs(objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue;
-
-        if (fabs(objectiveFunctionValue - newObjectiveFunctionValue)/newObjectiveFunctionValue > _Epsilon)
-        {
-            objectiveFunctionValue = newObjectiveFunctionValue;
-        }
-        else
-        {
-            done = true;
-        }
-    }
-    while(!done && (iterationCount < parMaxIterationCount));
-
-    _LastIterationCount = iterationCount;
-
-    _IsClustered = true;
-
-    int** pixels = new int*[_Image.width()];
-    for (int i=0; i < _Image.width(); i++)
-    {
-        pixels[i] = new int[_Image.height()];
+        _PixelLabels[i] = new int[_Height];
     }
 
-    for (int i=0; i<_Image.width(); i++)
-    {
-        for (int j=0; j<_Image.height(); j++)
-        {
-            double maxTF = TypicalityFunction(0,i,j);
-            pixels[i][j] = 0;
-
-            for (int k=1; k<_ClusterCount; k++)
-            {
-                double currentTF = TypicalityFunction(k,i,j);
-                if (currentTF > maxTF)
-                {
-                    maxTF = currentTF;
-                    pixels[i][j] = k;
-                }
-            }
-        }
-    }
-
-    return pixels;
-}
-
-void PCM::Init(int parMaxIterationCount)
-{
-    FCM fcm(_ClusterCount,_Image,_Epsilon,_M);
+    FCM fcm(_ClusterCount,_Pixels, _Width, _Height, _DegreeTF, _MaxIterationCount, _Precision);
 
     if (_ClusterCenters == NULL)
     {
-        _ClusterCenters = fcm.GetClusterCenters(parMaxIterationCount);
+        _ClusterCenters = fcm.FindClusterCenters();
     }
     else
     {
@@ -107,11 +52,11 @@ void PCM::Init(int parMaxIterationCount)
         double numerator=0;
         double denominator=0;
 
-        for (int i=0; i<_Image.width(); i++)
+        for (int i=0; i<_Width; i++)
         {
-            for (int j=0; j<_Image.height(); j++)
+            for (int j=0; j<_Height; j++)
             {
-                double mf = pow(fcm.MembershipFunction(k,i,j),_M);
+                double mf = pow(fcm.MembershipFunction(k,i,j),_DegreeTF);
 
                 numerator+=mf*pow(fcm.Distance(k,i,j),2);
                 denominator+=mf;
@@ -132,14 +77,14 @@ double PCM::ObjectiveFunction()
         //Сумма (1-Wk(Xij))^m
         double sumItf = 0;
         //Циклы по i и j - по пикселям изображения
-        for (int j=0; j<_Image.height(); j++)
+        for (int j=0; j<_Height; j++)
         {
-            for (int i=0; i<_Image.width(); i++)
+            for (int i=0; i<_Width; i++)
             {
-                sum+=pow(TypicalityFunction(k,i,j),_M)
+                sum+=pow(TypicalityFunction(k,i,j),_DegreeTF)
                         *pow(Distance(k,i,j),2);
 
-                sumItf+=pow((1-TypicalityFunction(k,i,j)),_M);
+                sumItf+=pow((1-TypicalityFunction(k,i,j)),_DegreeTF);
             }
         }
 
@@ -149,10 +94,10 @@ double PCM::ObjectiveFunction()
     return sum;
 }
 
-ClusterCenterRgb* PCM::NewCenterPositions()
+PixelRgb *PCM::NewCenterPositions()
 {
     //Новые координаты центроида
-    ClusterCenterRgb* newCenterPositioins = new ClusterCenterRgb[_ClusterCount];
+    PixelRgb* newCenterPositioins = new ClusterCenterRgb[_ClusterCount];
 
     //Для каждого кластера
     for (int k=0; k < _ClusterCount; k++)
@@ -165,17 +110,17 @@ ClusterCenterRgb* PCM::NewCenterPositions()
 
         double denominator=0;
 
-        for (int i=0; i < _Image.width(); i++)
+        for (int i=0; i < _Width; i++)
         {
-            for (int j=0; j < _Image.height(); j++)
+            for (int j=0; j < _Height; j++)
             {
-                double u = pow(TypicalityFunction(k,i,j),_M);
+                double u = pow(TypicalityFunction(k,i,j),_DegreeTF);
 
-                numeratorX+=u*i;
-                numeratorY+=u*j;
-                numeratorRed+=u*qRed(_Image.pixel(i,j));
-                numeratorGreen+=u*qGreen(_Image.pixel(i,j));
-                numeratorBlue+=u*qBlue(_Image.pixel(i,j));
+                numeratorX+=u*_Pixels[i][j].X;
+                numeratorY+=u*_Pixels[i][j].Y;
+                numeratorRed+=u*_Pixels[i][j].Red;
+                numeratorGreen+=u*_Pixels[i][j].Green;
+                numeratorBlue+=u*_Pixels[i][j].Blue;
 
                 denominator+=u;
             }
@@ -191,7 +136,30 @@ ClusterCenterRgb* PCM::NewCenterPositions()
     return newCenterPositioins;
 }
 
-double PCM::TypicalityFunction(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ)
+void PCM::PixelClustering()
 {
-    return 1/(1+pow(Distance(parClusterIndex,parPixelIndexI,parPixelIndexJ)/_BandWidth[parClusterIndex],2/(_M-1)));
+    for (int i=0; i<_Width; i++)
+    {
+        for (int j=0; j<_Height; j++)
+        {
+            double maxTF = TypicalityFunction(0,i,j);
+            _PixelLabels[i][j] = 0;
+
+            for (int k=1; k<_ClusterCount; k++)
+            {
+                double currentTF = TypicalityFunction(k,i,j);
+                if (currentTF > maxTF)
+                {
+                    maxTF = currentTF;
+                    _PixelLabels[i][j] = k;
+                }
+            }
+        }
+    }
+}
+
+
+double PCM::TypicalityFunction(int parClusterIndex, int parColumnIndex, int parRowIndex)
+{
+    return 1/(1+pow(Distance(parClusterIndex,parColumnIndex,parRowIndex)/_BandWidth[parClusterIndex],2/(_DegreeTF-1)));
 }

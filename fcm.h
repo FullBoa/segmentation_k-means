@@ -6,30 +6,30 @@
 class FCM : public KMeans
 {
 public:
-    FCM(int parClusterCount, QImage parImage, double epsilon, double parM);
 
-    int** Clustering(int parMaxIterationCount = MAX_ITERATION_COUNT);
+    static double const DEFAULT_DEGREE = 2;
 
-    ClusterCenterRgb* GetClusterCenters(int parMaxIterationCount = MAX_ITERATION_COUNT);
+    FCM(int parClusterCount,
+        PixelRgb** parPixels,
+        int parWidth,
+        int parHeight,
+        double parDegree = DEFAULT_DEGREE,
+        int parMaxIterationCount = DEFAULT_MAX_ITERATION_COUNT,
+        int parPrecision = DEFAULT_PRECISION);
 
-    double MembershipFunction(int parClusterIndex, int parPixelIndexI, int parPixelIndexJ);
+    double MembershipFunction(int parClusterIndex, int parColumnIndex, int parRowIndex);
 
-    double ObjectiveFunction();
+    virtual double ObjectiveFunction();
 
 protected:
 
-    double _Epsilon;
-
-    bool _IsClustered;
-
-    double _M;
+    double _DegreeFM;
 
     //Получение новых позиций центроидов
-    ClusterCenterRgb* NewCenterPositions();
+    virtual PixelRgb* NewCenterPositions();
 
-private:
-    //Инициализация массивов центроидов и пикселей сегментируемого изображения
-    void Init();
+    //Отнесение пикселя к сегментам
+    virtual void PixelClustering();
 };
 
 #endif // FCM_H
