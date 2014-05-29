@@ -26,6 +26,13 @@ public:
                                   int parMethodCount,
                                   svm_parameter parParameters);
 
+    static int** SegmentationEncemble(PixelRgb** parPixels,
+                                      int parWidth,
+                                      int parHeight,
+                                      int ***parPixelLabels,
+                                      int parMethodCount,
+                                      svm_parameter parParameters);
+
 private:
     svm_parameter _Parameters;
 };

@@ -212,3 +212,127 @@ int** SVMeFC::SegmentationCSPA(PixelRgb **parPixels,
 
     return resultLabels;
 }
+
+int** SVMeFC::SegmentationEncemble(PixelRgb **parPixels,
+                                   int parWidth,
+                                   int parHeight,
+                                   int ***parPixelLabels,
+                                   int parMethodCount,
+                                   svm_parameter parParameters)
+{
+    int** SVMLabels = new int*[parWidth];
+    for (int i=0; i < parWidth; i++)
+    {
+        SVMLabels[i] = new int[parHeight];
+    }
+
+    QList<svm_node*> trainList;
+    QList<int> labelList;
+
+    int trainSetSize = 0;
+
+    for (int i=0; i<parWidth; i++)
+    {
+        for (int j=0; j<parHeight; j++)
+        {
+            bool isOne = true;
+
+            int currentLabel = parPixelLabels[0][i][j];
+            for (int k=1; k<parMethodCount; k++)
+            {
+                if (parPixelLabels[k][i][j] != currentLabel)
+                {
+                    isOne = false;
+                    break;
+                }
+            }
+
+            if (isOne)
+            {
+                SVMLabels[i][j] = parPixelLabels[0][i][j];
+
+                svm_node* node = new svm_node[6]; //5 под размерность и 1 под (индекс -1)
+                node[0].index = 1;
+                node[0].value =parPixels[i][j].X;
+
+                node[1].index = 2;
+                node[1].value =parPixels[i][j].Y;
+
+                node[2].index=3;
+                node[2].value=parPixels[i][j].Red;
+
+                node[3].index=4;
+                node[3].value=parPixels[i][j].Green;
+
+                node[4].index=5;
+                node[4].value=parPixels[i][j].Blue;
+
+                node[5].index=-1;
+
+                trainList.append(node);
+                labelList.append(parPixelLabels[0][i][j]);
+
+                trainSetSize++;
+            }
+            //Точка расположена далеко от центра кластера
+            else
+            {
+                SVMLabels[i][j] = -1;
+            }
+        }
+    }
+
+    int testSetSize = parWidth*parHeight - trainSetSize;
+
+    svm_problem trainProblem;
+    trainProblem.l = trainSetSize;
+    trainProblem.y = new double[trainSetSize];
+    trainProblem.x = new svm_node*[trainSetSize];
+
+    for(int i=0; i<trainSetSize; i++)
+    {
+        trainProblem.y[i]=labelList.at(i);
+        trainProblem.x[i]=trainList.at(i);
+    }
+
+    qDebug() << "train set size: " << trainProblem.l;
+    qDebug() << "test set size: " << testSetSize;
+
+    if (svm_check_parameter(&trainProblem, &parParameters) == NULL)
+    {
+        svm_model* model=svm_train(&trainProblem,&parParameters);
+
+        for (int i=0; i<parWidth; i++)
+        {
+            for (int j=0; j<parHeight; j++)
+            {
+                if (SVMLabels[i][j] == -1)
+                {
+                    svm_node* node = new svm_node[6]; //5 под размерность и 1 под (индекс -1)
+                    node[0].index = 1;
+                    node[0].value =parPixels[i][j].X;
+
+                    node[1].index = 2;
+                    node[1].value =parPixels[i][j].Y;
+
+                    node[2].index=3;
+                    node[2].value=parPixels[i][j].Red;
+
+                    node[3].index=4;
+                    node[3].value=parPixels[i][j].Green;
+
+                    node[4].index=5;
+                    node[4].value=parPixels[i][j].Blue;
+
+                    node[5].index=-1;
+
+                    SVMLabels[i][j] = (int)svm_predict(model,node);
+
+                    delete node;
+                }
+            }
+        }
+    }
+
+    return SVMLabels;
+}

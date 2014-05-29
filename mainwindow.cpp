@@ -104,9 +104,12 @@ void MainWindow::Segmentation()
     KMeans segmentator(clusterCount,image,width, height);
     pixels = segmentator.Clustering();
 
+    PixelRgb* clusterCentersKM = segmentator.ClusterCenters();
+
     qDebug() << "FCM run";
     int** pixelsFCM;
     FCM segmentatorFCM(clusterCount,image,width,height);
+    segmentatorFCM.SetClusterCenters(clusterCentersKM);
     pixelsFCM = segmentatorFCM.Clustering();
 
     PixelRgb* clusterCentersFCM = segmentatorFCM.ClusterCenters();
@@ -140,15 +143,6 @@ void MainWindow::Segmentation()
     parameters.shrinking = 0;
     parameters.probability = 0;
 
-   /* int** pixelsSVM;
-    pixelsSVM = SVMeFC::SegmentationC(image,
-                                     width,
-                                     height,
-                                     pixels,
-                                     clusterCount,
-                                     segmentator.ClusterCenters(),
-                                     parameters);*/
-
     int** pixelsCSPA;
     int*** labels = new int**[3];
 
@@ -169,6 +163,14 @@ void MainWindow::Segmentation()
                                           clusterCenters,
                                           3,
                                           parameters);
+
+    int** pixelsSVM;
+    pixelsSVM = SVMeFC::SegmentationEncemble(image,
+                                             width,
+                                             height,
+                                             labels,
+                                             3,
+                                             parameters);
 
 
 
@@ -202,8 +204,8 @@ void MainWindow::Segmentation()
     QImage newImage;
     newImage = _ImageSource;
 
-  /*  QImage imageSVM;
-    imageSVM = _ImageSource;*/
+    QImage imageSVM;
+    imageSVM = _ImageSource;
 
     QImage imageFCM;
     imageFCM = _ImageSource;
@@ -235,8 +237,8 @@ void MainWindow::Segmentation()
             numberCluster = pixelsPFCM[i][j];
             imagePFCM.setPixel(i,j,colors[numberCluster]);
 
-        /*    numberCluster = pixelsSVM[i][j];
-            imageSVM.setPixel(i,j,colors[numberCluster]);*/
+            numberCluster = pixelsSVM[i][j];
+            imageSVM.setPixel(i,j,colors[numberCluster]);
 
             numberCluster = pixelsCSPA[i][j];
             imageCSPA.setPixel(i,j,colors[numberCluster]);
@@ -271,13 +273,13 @@ void MainWindow::Segmentation()
     resultsCSPA->ShowResult(1,
                        clusterCount,
                        imageCSPA,
-                           "SVMeFC");
+                           "CSPA");
 
-   /* DialogResult* resultsSVM = new DialogResult();
+    DialogResult* resultsSVM = new DialogResult();
     resultsSVM->ShowResult(1,
                        ui->sliderClusterCount->value(),
                        imageSVM,
-                           "SVM");*/
+                           "SVMeFC");
     //ui->labelImageSource->setPixmap(QPixmap().fromImage(newImage).scaled(ui->labelImageSource->size(),
                                          //                               Qt::KeepAspectRatio));
 }
