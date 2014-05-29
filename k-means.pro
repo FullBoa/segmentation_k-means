@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     fcm.cpp \
     pcm.cpp \
     pfcm.cpp \
-    svm.cpp
+    svm.cpp \
+    svmefc.cpp
 
 HEADERS  += mainwindow.h \
     kmeans.h \
@@ -25,7 +26,8 @@ HEADERS  += mainwindow.h \
     fcm.h \
     pcm.h \
     pfcm.h \
-    svm.h
+    svm.h \
+    svmefc.h
 
 FORMS    += mainwindow.ui \
     dialogresult.ui
